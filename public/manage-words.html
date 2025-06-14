@@ -65,6 +65,28 @@
             transform: translateY(-2px);
         }
 
+        .add-word-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-word-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
         .content {
             padding: 2.5rem;
         }
@@ -399,6 +421,31 @@
             background: #5a6268;
         }
 
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -466,6 +513,23 @@
                 justify-content: center;
                 flex-wrap: wrap;
             }
+
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
+                display: inline-block;
+            }
+
+            .add-word-button {
+                position: static;
+                margin-bottom: 1rem;
+                align-self: center;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -473,6 +537,9 @@
     <div class="container">
         <div class="header">
             <a href="index.html" class="back-button">← Back</a>
+            <button class="add-word-button" onclick="openAddModal()">
+                <span>+</span> Add Word
+            </button>
             <h1>Manage Words</h1>
             <p>View and manage your Latin vocabulary</p>
         </div>
@@ -534,6 +601,26 @@
         </div>
     </div>
 
+    <!-- Add Word Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Word</h3>
+            <form class="modal-form" id="addForm">
+                <input type="text" id="addLatin" placeholder="Latin word" required>
+                <input type="text" id="addEnglish" placeholder="English translation" required>
+                <select id="addDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Add Word</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -555,6 +642,9 @@
         </div>
     </div>
 
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
@@ -571,8 +661,11 @@
         const wordsContainer = document.getElementById('wordsContainer');
         const searchInput = document.getElementById('searchInput');
         const filterButtons = document.querySelectorAll('.filter-btn');
+        const addModal = document.getElementById('addModal');
         const editModal = document.getElementById('editModal');
+        const addForm = document.getElementById('addForm');
         const editForm = document.getElementById('editForm');
+        const notification = document.getElementById('notification');
 
         // Statistics elements
         const totalWordsEl = document.getElementById('totalWords');
@@ -603,6 +696,12 @@
             });
         });
 
+        // Add form submission
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addWord();
+        });
+
         // Edit form submission
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -618,11 +717,11 @@
                     updateStatistics();
                     applyFilter();
                 } else {
-                    showError('Failed to load words: ' + result.error);
+                    showNotification('Failed to load words: ' + result.error, 'error');
                 }
             } catch (error) {
                 console.error('Error loading words:', error);
-                showError('Failed to load words. Please check your connection.');
+                showNotification('Failed to load words. Please check your connection.', 'error');
             }
         }
 
@@ -642,7 +741,7 @@
                 wordsContainer.innerHTML = `
                     <div class="empty-state">
                         <h3>No words found</h3>
-                        <p>Try adjusting your search or filter, or <a href="add-words.html">add some words</a> to get started.</p>
+                        <p>Try adjusting your search or filter, or add some words to get started.</p>
                     </div>
                 `;
                 return;
@@ -700,6 +799,56 @@
             wordsToReviewEl.textContent = wordsToReview;
         }
 
+        function openAddModal() {
+            // Clear form
+            document.getElementById('addLatin').value = '';
+            document.getElementById('addEnglish').value = '';
+            document.getElementById('addDifficulty').value = 'medium';
+            
+            addModal.classList.add('show');
+            // Focus on first input
+            setTimeout(() => document.getElementById('addLatin').focus(), 100);
+        }
+
+        function closeAddModal() {
+            addModal.classList.remove('show');
+        }
+
+        async function addWord() {
+            const latin = document.getElementById('addLatin').value.trim();
+            const english = document.getElementById('addEnglish').value.trim();
+            const difficulty = document.getElementById('addDifficulty').value;
+
+            if (!latin || !english) {
+                showNotification('Please fill in both Latin and English fields', 'error');
+                return;
+            }
+
+            // Check for duplicates
+            const duplicate = allWords.find(word => 
+                word.latin.toLowerCase() === latin.toLowerCase()
+            );
+
+            if (duplicate) {
+                showNotification('This Latin word already exists in your vocabulary', 'error');
+                return;
+            }
+
+            try {
+                const result = await VocabDB.addWord(latin, english, difficulty);
+                if (result.success) {
+                    closeAddModal();
+                    await loadWords(); // Reload to refresh display
+                    showNotification('Word added successfully!', 'success');
+                } else {
+                    showNotification('Failed to add word: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding word:', error);
+                showNotification('Failed to add word. Please try again.', 'error');
+            }
+        }
+
         function editWord(wordId) {
             const word = allWords.find(w => w.id === wordId);
             if (!word) return;
@@ -722,7 +871,20 @@
             const english = document.getElementById('editEnglish').value.trim();
             const difficulty = document.getElementById('editDifficulty').value;
 
-            if (!latin || !english) return;
+            if (!latin || !english) {
+                showNotification('Please fill in both Latin and English fields', 'error');
+                return;
+            }
+
+            // Check for duplicates (excluding current word)
+            const duplicate = allWords.find(word => 
+                word.latin.toLowerCase() === latin.toLowerCase() && word.id !== wordId
+            );
+
+            if (duplicate) {
+                showNotification('This Latin word already exists in your vocabulary', 'error');
+                return;
+            }
 
             try {
                 await VocabDB.wordsCollection.doc(wordId).update({
@@ -733,10 +895,10 @@
 
                 closeEditModal();
                 await loadWords(); // Reload to refresh display
-                showSuccess('Word updated successfully!');
+                showNotification('Word updated successfully!', 'success');
             } catch (error) {
                 console.error('Error updating word:', error);
-                showError('Failed to update word.');
+                showNotification('Failed to update word.', 'error');
             }
         }
 
@@ -749,29 +911,51 @@
                 const result = await VocabDB.deleteWord(wordId);
                 if (result.success) {
                     await loadWords(); // Reload to refresh display
-                    showSuccess('Word deleted successfully!');
+                    showNotification('Word deleted successfully!', 'success');
                 } else {
-                    showError('Failed to delete word: ' + result.error);
+                    showNotification('Failed to delete word: ' + result.error, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting word:', error);
-                showError('Failed to delete word.');
+                showNotification('Failed to delete word.', 'error');
             }
         }
 
-        function showSuccess(message) {
-            // You can implement a toast notification here
-            alert(message);
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
 
-        function showError(message) {
-            alert(message);
-        }
+        // Close modals when clicking outside
+        addModal.addEventListener('click', (e) => {
+            if (e.target === addModal) {
+                closeAddModal();
+            }
+        });
 
-        // Close modal when clicking outside
         editModal.addEventListener('click', (e) => {
             if (e.target === editModal) {
                 closeEditModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape key closes modals
+            if (e.key === 'Escape') {
+                closeAddModal();
+                closeEditModal();
+            }
+            
+            // Ctrl/Cmd + N opens add modal
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openAddModal();
             }
         });
     </script>
