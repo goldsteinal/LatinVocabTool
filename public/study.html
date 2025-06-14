@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study - Latin Vocabulary Learner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 2rem);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .progress-container {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .study-area {
+            padding: 2.5rem;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .setup-screen {
+            display: block;
+        }
+
+        .study-screen {
+            display: none;
+        }
+
+        .results-screen {
+            display: none;
+        }
+
+        .session-setup h2 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+        }
+
+        .setup-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .option-group {
+            text-align: left;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .option-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .option-btn.selected {
+            border-color: #ff6b6b;
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .option-btn:hover {
+            border-color: #ff6b6b;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .question-type {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .question-word {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .question-prompt {
+            font-size: 1.1rem;
+            color: #495057;
+        }
+
+        .answer-section {
+            margin-top: 2rem;
+        }
+
+        .answer-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 1rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .skip-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skip-button:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .feedback {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 15px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .feedback.skipped {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .next-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .next-button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .results-summary {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .results-summary h2 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .accuracy-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#ff6b6b 0% var(--accuracy), #e9ecef var(--accuracy) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .accuracy-circle::before {
+            content: '';
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .accuracy-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            z-index: 1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #6c757d;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6b6b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-words {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .no-words h3 {
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .study-area {
+                padding: 2rem 1.5rem;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
+                display: inline-block;
+            }
+
+            .question-word {
+                font-size: 2rem;
+            }
+
+            .option-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">← Back</a>
+            <h1>Study Session</h1>
+            <p>Practice your Latin vocabulary</p>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressText">Question 1 of 10</span>
+                <span id="accuracyText">Accuracy: 0%</span>
+            </div>
+        </div>
+
+        <div class="study-area">
+            <!-- Loading Screen -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Loading your vocabulary...</p>
+            </div>
+
+            <!-- No Words Screen -->
+            <div class="no-words" id="noWords" style="display: none;">
+                <h3>No words to study!</h3>
+                <p>Add some words to your vocabulary first.</p>
+                <a href="add-words.html" class="start-button" style="display: inline-block; text-decoration: none; margin-top: 1rem;">
+                    Add Words
+                </a>
+            </div>
+
+            <!-- Setup Screen -->
+            <div class="setup-screen" id="setupScreen" style="display: none;">
+                <div class="session-setup">
+                    <h2>Start Study Session</h2>
+                    <div class="setup-options">
+                        <div class="option-group">
+                            <label>Session Length</label>
+                            <div class="option-buttons">
+                                <div class="option-btn selected" data-option="length" data-value="10">10 questions</div>
+                                <div class="option-btn" data-option="length" data-value="20">20 questions</div>
+                                <div class="option-btn" data-option="length" data-value="50">50 questions</div>
+                            </div>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label>Focus Mode</label>
+                            <div class="option-buttons">
+                                <div class="option-btn selected" data-option="mode" data-value="mixed">Mixed</div>
+                                <div class="option-btn" data-option="mode" data-value="latin">Latin → English</div>
+                                <div class="option-btn" data-option="mode" data-value="english">English → Latin</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="start-button" id="startStudyBtn">Start Studying</button>
+                </div>
+            </div>
+
+            <!-- Study Screen -->
+            <div class="study-screen" id="studyScreen">
+                <div class="question-card" id="questionCard">
+                    <div class="question-type" id="questionType">Latin → English</div>
+                    <div class="question-word" id="questionWord">aqua</div>
+                    <div class="question-prompt">What does this mean in English?</div>
+                </div>
+
+                <div class="answer-section" id="answerSection">
+                    <input type="text" class="answer-input" id="answerInput" placeholder="Type your answer..." autocomplete="off">
+                    <div>
+                        <button class="submit-button" id="submitBtn">Submit</button>
+                        <button class="skip-button" id="skipBtn">Skip</button>
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback">
+                    <div id="feedbackText"></div>
+                    <button class="next-button" id="nextBtn">Next Question</button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div class="results-screen" id="resultsScreen">
+                <div class="results-summary">
+                    <h2>Session Complete!</h2>
+                    
+                    <div class="accuracy-circle" id="accuracyCircle">
+                        <div class="accuracy-text" id="accuracyPercentage">0%</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalQuestions">0</div>
+                            <div class="stat-label">Questions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="correctAnswers">0</div>
+                            <div class="stat-label">Correct</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="incorrectAnswers">0</div>
+                            <div class="stat-label">Incorrect</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="skippedAnswers">0</div>
+                            <div class="stat-label">Skipped</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="start-button" id="studyAgainBtn">Study Again</button>
+                        <a href="index.html" class="skip-button" style="text-decoration: none; display: inline-block;">Back to Main</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        class StudySession {
+            constructor() {
+                this.words = [];
+                this.currentQuestion = 0;
+                this.sessionLength = 10;
+                this.studyMode = 'mixed';
+                this.correct = 0;
+                this.incorrect = 0;
+                this.skipped = 0;
+                this.currentWord = null;
+                this.questionType = null;
+                this.isAnswered = false;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadWords();
+            }
+
+            initializeElements() {
+                // Screens
+                this.loadingDiv = document.getElementById('loading');
+                this.noWordsDiv = document.getElementById('noWords');
+                this.setupScreen = document.getElementById('setupScreen');
+                this.studyScreen = document.getElementById('studyScreen');
+                this.resultsScreen = document.getElementById('resultsScreen');
+                this.progressContainer = document.getElementById('progressContainer');
+
+                // Setup elements
+                this.startStudyBtn = document.getElementById('startStudyBtn');
+                this.optionButtons = document.querySelectorAll('.option-btn');
+
+                // Study elements
+                this.questionType = document.getElementById('questionType');
+                this.questionWord = document.getElementById('questionWord');
+                this.answerInput = document.getElementById('answerInput');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.skipBtn = document.getElementById('skipBtn');
+                this.feedback = document.getElementById('feedback');
+                this.feedbackText = document.getElementById('feedbackText');
+                this.nextBtn = document.getElementById('nextBtn');
+
+                // Progress elements
+                this.progressFill = document.getElementById('progressFill');
+                this.progressText = document.getElementById('progressText');
+                this.accuracyText = document.getElementById('accuracyText');
+
+                // Results elements
+                this.studyAgainBtn = document.getElementById('studyAgainBtn');
+                this.accuracyCircle = document.getElementById('accuracyCircle');
+                this.accuracyPercentage = document.getElementById('accuracyPercentage');
+            }
+
+            setupEventListeners() {
+                // Option buttons
+                this.optionButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const option = btn.dataset.option;
+                        const value = btn.dataset.value;
+                        
+                        // Remove selected from siblings
+                        document.querySelectorAll(`[data-option="${option}"]`).forEach(b => 
+                            b.classList.remove('selected'));
+                        btn.classList.add('selected');
+
+                        if (option === 'length') {
+                            this.sessionLength = parseInt(value);
+                        } else if (option === 'mode') {
+                            this.studyMode = value;
+                        }
+                    });
+                });
+
+                // Start study button
+                this.startStudyBtn.addEventListener('click', () => {
+                    this.startSession();
+                });
+
+                // Study buttons
+                this.submitBtn.addEventListener('click', () => {
+                    this.submitAnswer();
+                });
+
+                this.skipBtn.addEventListener('click', () => {
+                    this.skipQuestion();
+                });
+
+                this.nextBtn.addEventListener('click', () => {
+                    this.nextQuestion();
+                });
+
+                // Study again button
+                this.studyAgainBtn.addEventListener('click', () => {
+                    this.resetSession();
+                });
+
+                // Enter key submission
+                this.answerInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !this.isAnswered) {
+                        this.submitAnswer();
+                    }
+                });
+            }
+
+async loadWords() {
+    this.loadingDiv.style.display = 'block';
+    
+    try {
+        const result = await VocabDB.getAllWords();
+        
+        if (result.success) {
+            if (result.words.length === 0) {
+                this.loadingDiv.style.display = 'none';
+                this.noWordsDiv.style.display = 'block';
+                return;
+            }
+
+            this.words = this.prioritizeWords(result.words);
+            this.loadingDiv.style.display = 'none';
+            this.setupScreen.style.display = 'block';
+        } else {
+            throw new Error(result.error || 'Failed to load words');
+        }
+        
+    } catch (error) {
+        console.error('Error loading words:', error);
+        this.loadingDiv.style.display = 'none';
+        this.noWordsDiv.style.display = 'block';
+    }
+}
+            prioritizeWords(words) {
+    // Implement spaced repetition logic
+    const now = new Date();
+    
+    return words.map(word => {
+        const stats = word.statistics || {
+            timesStudied: 0,
+            timesCorrect: 0,
+            lastReviewed: null,
+            streak: 0,
+            nextReview: null
+        };
+
+        // Calculate priority score (higher = more likely to appear)
+        let priority = 1;
+        
+        // New words get higher priority
+        if (stats.timesStudied === 0 || !stats.lastReviewed) {
+            priority += 5;
+        } else {
+            // Words not seen recently get higher priority
+            const lastReviewed = stats.lastReviewed.toDate ? stats.lastReviewed.toDate() : new Date(stats.lastReviewed);
+            const daysSinceReview = (now - lastReviewed) / (1000 * 60 * 60 * 24);
+            priority += Math.min(daysSinceReview / 7, 3); // Max 3 points for time
+        }
+
+        // Words with lower success rate get higher priority
+        const successRate = stats.timesStudied > 0 ? stats.timesCorrect / stats.timesStudied : 0;
+        priority += (1 - successRate) * 3;
+        
+        // Words with low streaks get higher priority
+        priority += Math.max(0, 3 - (stats.streak || 0));
+
+        // Words due for review get highest priority
+        if (stats.nextReview) {
+            const nextReview = stats.nextReview.toDate ? stats.nextReview.toDate() : new Date(stats.nextReview);
+            if (nextReview <= now) {
+                priority += 10;
+            }
+        }
+
+        return { ...word, priority };
+    }).sort((a, b) => b.priority - a.priority);
+}
+            startSession() {
+                this.setupScreen.style.display = 'none';
+                this.studyScreen.style.display = 'block';
+                this.progressContainer.style.display = 'block';
+                
+                this.currentQuestion = 0;
+                this.correct = 0;
+                this.incorrect = 0;
+                this.skipped = 0;
+                
+                this.nextQuestion();
+            }
+
+            nextQuestion() {
+                if (this.currentQuestion >= this.sessionLength) {
+                    this.showResults();
+                    return;
+                }
+
+                this.currentQuestion++;
+                this.isAnswered = false;
+                
+                // Select word (with repetition for incorrect answers)
+                const wordIndex = (this.currentQuestion - 1) % this.words.length;
+                this.currentWord = this.words[wordIndex];
+                
+                // Determine question type
+                if (this.studyMode === 'mixed') {
+                    this.questionType = Math.random() < 0.5 ? 'latin' : 'english';
+                } else {
+                    this.questionType = this.studyMode;
+                }
+
+                this.displayQuestion();
+                this.updateProgress();
+                this.resetAnswerSection();
+            }
+
+            displayQuestion() {
+                const typeElement = document.getElementById('questionType');
+                const wordElement = document.getElementById('questionWord');
+                const promptElement = document.querySelector('.question-prompt');
+
+                if (this.questionType === 'latin') {
+                    typeElement.textContent = 'Latin → English';
+                    wordElement.textContent = this.currentWord.latin;
+                    promptElement.textContent = 'What does this mean in English?';
+                } else {
+                    typeElement.textContent = 'English → Latin';
+                    wordElement.textContent = this.currentWord.english;
+                    promptElement.textContent = 'How do you say this in Latin?';
+                }
+            }
+
+            resetAnswerSection() {
+                this.answerInput.value = '';
+                this.answerInput.style.display = 'inline-block';
+                this.submitBtn.style.display = 'inline-block';
+                this.skipBtn.style.display = 'inline-block';
+                this.feedback.style.display = 'none';
+                this.answerInput.focus();
+            }
+
+            async submitAnswer() {
+                if (this.isAnswered) return;
+                
+                const userAnswer = this.answerInput.value.trim().toLowerCase();
+                const correctAnswer = this.questionType === 'latin' 
+                    ? this.currentWord.english.toLowerCase()
+                    : this.currentWord.latin.toLowerCase();
+
+                const isCorrect = userAnswer === correctAnswer;
+                this.isAnswered = true;
+
+                if (isCorrect) {
+                    this.correct++;
+                    this.showFeedback('correct', `Correct! "${userAnswer}" is right.`);
+                } else {
+                    this.incorrect++;
+                    this.showFeedback('incorrect', 
+                        `Incorrect. The correct answer is "${correctAnswer}".`);
+                }
+
+                // Update word statistics
+                await this.updateWordStats(isCorrect);
+                
+                this.hideAnswerControls();
+            }
+
+            skipQuestion() {
+                if (this.isAnswered) return;
+                
+                this.skipped++;
+                this.isAnswered = true;
+                
+                const correctAnswer = this.questionType === 'latin' 
+                    ? this.currentWord.english
+                    : this.currentWord.latin;
+                    
+                this.showFeedback('skipped', `The answer was "${correctAnswer}".`);
+                this.hideAnswerControls();
+                
+                // Count as incorrect for statistics
+                this.updateWordStats(false);
+            }
+
+async updateWordStats(isCorrect) {
+    try {
+        if (!firebase || !firebase.firestore) {
+            console.error('Firebase is not initialized');
+            return;
+        }
+
+        const db = firebase.firestore();
+
+        const stats = this.currentWord.statistics || {
+            timesStudied: 0,
+            timesCorrect: 0,
+            lastReviewed: null,
+            streak: 0,
+            nextReview: null
+        };
+
+        stats.timesStudied++;
+
+        if (isCorrect) {
+            stats.timesCorrect++;
+            stats.streak = (stats.streak || 0) + 1;
+        } else {
+            stats.streak = 0;
+        }
+
+        stats.lastReviewed = firebase.firestore.Timestamp.now();
+
+        // Calculate next review date
+        const multiplier = Math.pow(2, Math.min(stats.streak, 6)); // Cap at 64 days
+        const nextReviewDate = new Date();
+        nextReviewDate.setDate(nextReviewDate.getDate() + multiplier);
+        stats.nextReview = firebase.firestore.Timestamp.fromDate(nextReviewDate);
+
+        // Use set with merge to avoid "No document to update" error
+        await db.collection('words').doc(this.currentWord.id).set({
+            statistics: stats
+        }, { merge: true });
+
+        this.currentWord.statistics = stats;
+
+    } catch (error) {
+        console.error('Error updating word stats:', error);
+    }
+}
+            showFeedback(type, text) {
+                this.feedback.className = `feedback ${type}`;
+                this.feedbackText.textContent = text;
+                this.feedback.style.display = 'block';
+            }
+
+            hideAnswerControls() {
+                this.answerInput.style.display = 'none';
+                this.submitBtn.style.display = 'none';
+                this.skipBtn.style.display = 'none';
+            }
+
+            updateProgress() {
+                const progress = (this.currentQuestion / this.sessionLength) * 100;
+                this.progressFill.style.width = `${progress}%`;
+                this.progressText.textContent = `Question ${this.currentQuestion} of ${this.sessionLength}`;
+                
+                const totalAnswered = this.correct + this.incorrect + this.skipped;
+                const accuracy = totalAnswered > 0 ? Math.round((this.correct / totalAnswered) * 100) : 0;
+                this.accuracyText.textContent = `Accuracy: ${accuracy}%`;
+            }
+
+            showResults() {
+                this.studyScreen.style.display = 'none';
+                this.progressContainer.style.display = 'none';
+                this.resultsScreen.style.display = 'block';
+
+                const total = this.correct + this.incorrect + this.skipped;
+                const accuracy = total > 0 ? Math.round((this.correct / total) * 100) : 0;
+
+                // Update accuracy circle
+                this.accuracyCircle.style.setProperty('--accuracy', `${accuracy}%`);
+                this.accuracyPercentage.textContent = `${accuracy}%`;
+
+                // Update stats
+                document.getElementById('totalQuestions').textContent = total;
+                document.getElementById('correctAnswers').textContent = this.correct;
+                document.getElementById('incorrectAnswers').textContent = this.incorrect;
+                document.getElementById('skippedAnswers').textContent = this.skipped;
+            }
+
+            resetSession() {
+                this.resultsScreen.style.display = 'none';
+                this.setupScreen.style.display = 'block';
+                this.progressContainer.style.display = 'none';
+                
+                // Reload words to get updated priorities
+                this.loadWords();
+            }
+        }
+
+        // Initialize the study session when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new StudySession();
+        });
+    </script>
+</body>
+</html>

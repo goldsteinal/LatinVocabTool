@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Words - Latin Vocabulary Learner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .form-container {
+            padding: 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #56ab2f;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(86, 171, 47, 0.1);
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .difficulty-option {
+            flex: 1;
+            padding: 0.8rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .difficulty-option.selected {
+            border-color: #56ab2f;
+            background: #56ab2f;
+            color: white;
+        }
+
+        .difficulty-option:hover {
+            border-color: #56ab2f;
+        }
+
+        .add-button {
+            width: 100%;
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .add-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(86, 171, 47, 0.3);
+        }
+
+        .add-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #56ab2f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quick-add {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .quick-add h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .quick-add-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .quick-add-button {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .quick-add-button:hover {
+            background: #56ab2f;
+            color: white;
+            border-color: #56ab2f;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .form-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
+                display: inline-block;
+            }
+
+            .difficulty-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">← Back</a>
+            <h1>Add New Words</h1>
+            <p>Build your Latin vocabulary</p>
+        </div>
+
+        <div class="form-container">
+            <div id="message" class="message" style="display: none;"></div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Adding word to your vocabulary...
+            </div>
+
+            <form id="addWordForm">
+                <div class="form-group">
+                    <label for="latinWord">Latin Word</label>
+                    <input type="text" id="latinWord" name="latinWord" placeholder="e.g., aqua" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="englishTranslation">English Translation</label>
+                    <input type="text" id="englishTranslation" name="englishTranslation" placeholder="e.g., water" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Difficulty Level</label>
+                    <div class="difficulty-selector">
+                        <div class="difficulty-option" data-difficulty="easy">Easy</div>
+                        <div class="difficulty-option selected" data-difficulty="medium">Medium</div>
+                        <div class="difficulty-option" data-difficulty="hard">Hard</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="add-button" id="addButton">
+                    ➕ Add Word to Vocabulary
+                </button>
+            </form>
+
+            <div class="quick-add">
+                <h3>Quick Add Common Words</h3>
+                <div class="quick-add-buttons">
+                    <div class="quick-add-button" data-latin="amor" data-english="love">amor - love</div>
+                    <div class="quick-add-button" data-latin="pax" data-english="peace">pax - peace</div>
+                    <div class="quick-add-button" data-latin="vita" data-english="life">vita - life</div>
+                    <div class="quick-add-button" data-latin="tempus" data-english="time">tempus - time</div>
+                    <div class="quick-add-button" data-latin="veritas" data-english="truth">veritas - truth</div>
+                    <div class="quick-add-button" data-latin="sapientia" data-english="wisdom">sapientia - wisdom</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+<script>
+        // Wait for the DOM to be fully loaded before running any script
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM elements
+            const form = document.getElementById('addWordForm');
+            const latinInput = document.getElementById('latinWord');
+            const englishInput = document.getElementById('englishTranslation');
+            const addButton = document.getElementById('addButton');
+            const messageDiv = document.getElementById('message');
+            const loadingDiv = document.getElementById('loading');
+            const difficultyOptions = document.querySelectorAll('.difficulty-option');
+            const quickAddButtons = document.querySelectorAll('.quick-add-button');
+
+            let selectedDifficulty = 'medium';
+
+            // Difficulty selector
+            difficultyOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    difficultyOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedDifficulty = option.dataset.difficulty;
+                });
+            });
+
+            // Quick add functionality
+            quickAddButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    latinInput.value = button.dataset.latin;
+                    englishInput.value = button.dataset.english;
+                    latinInput.focus();
+                });
+            });
+
+            // Form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const latin = latinInput.value.trim();
+                const english = englishInput.value.trim();
+
+                if (!latin || !english) {
+                    showMessage('Please fill in both fields', 'error');
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    // Check if word already exists
+                    const exists = await VocabDB.wordExists(latin, english);
+                    if (exists) {
+                        showMessage('This word pair already exists in your vocabulary!', 'error');
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Add the word
+                    const result = await VocabDB.addWord(latin, english, selectedDifficulty);
+                    
+                    if (result.success) {
+                        showMessage(`Successfully added "${latin}" - "${english}" to your vocabulary!`, 'success');
+                        form.reset();
+                        latinInput.focus();
+                        
+                        // Reset difficulty to medium
+                        difficultyOptions.forEach(opt => opt.classList.remove('selected'));
+                        document.querySelector('[data-difficulty="medium"]').classList.add('selected');
+                        selectedDifficulty = 'medium';
+                    } else {
+                        showMessage(`Error adding word: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('Failed to add word. Please check your internet connection.', 'error');
+                }
+
+                setLoading(false);
+            });
+
+            // Helper functions
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `message ${type}`;
+                messageDiv.style.display = 'block';
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+
+            function setLoading(isLoading) {
+                loadingDiv.style.display = isLoading ? 'block' : 'none';
+                addButton.disabled = isLoading;
+                
+                if (isLoading) {
+                    addButton.textContent = 'Adding...';
+                } else {
+                    addButton.textContent = '➕ Add Word to Vocabulary';
+                }
+            }
+
+            // Focus on first input when page is ready
+            latinInput.focus();
+        });
+    </script>
+</body>
+</html>

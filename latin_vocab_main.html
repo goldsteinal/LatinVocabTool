@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latin Vocabulary Learner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            margin: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2.5rem;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            font-weight: 300;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .menu-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .menu-button:active {
+            transform: translateY(0);
+        }
+
+        .menu-button.add-words {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+        }
+
+        .menu-button.add-words:hover {
+            box-shadow: 0 8px 25px rgba(86, 171, 47, 0.4);
+        }
+
+        .menu-button.study {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .menu-button.study:hover {
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .menu-button.manage {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .menu-button.manage:hover {
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+
+        .icon {
+            font-size: 1.3rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #ecf0f1;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .menu-button {
+                padding: 1rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Latin Vocabulary</h1>
+            <p class="subtitle">Master Latin with spaced repetition</p>
+        </div>
+
+        <div class="menu-buttons">
+            <a href="add-words.html" class="menu-button add-words">
+                <span class="icon">➕</span>
+                <span>Add Words</span>
+            </a>
+
+            <a href="study.html" class="menu-button study">
+                <span class="icon">📚</span>
+                <span>Study</span>
+            </a>
+
+            <a href="manage-words.html" class="menu-button manage">
+                <span class="icon">⚙️</span>
+                <span>Manage Words</span>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>Build your Latin vocabulary with intelligent spaced repetition</p>
+        </div>
+    </div>
+</body>
+</html>
