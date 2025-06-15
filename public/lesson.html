@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson - Latin Vocabulary Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .lesson-title {
+            flex: 1;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        .lesson-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .lesson-stats {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .study-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .study-btn:hover {
+            background: #229954;
+        }
+
+        .export-btn, .import-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover, .import-btn:hover {
+            background: #2980b9;
+        }
+
+        .add-word {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .add-word h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        .word-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        button.delete {
+            background: #e74c3c;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        button.delete:hover {
+            background: #c0392b;
+        }
+
+        button.edit {
+            background: #f39c12;
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        button.edit:hover {
+            background: #e67e22;
+        }
+
+        .words-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .word-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .word-item:last-child {
+            border-bottom: none;
+        }
+
+        .latin-word {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .english-word {
+            color: #555;
+        }
+
+        .word-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .import-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .file-input {
+            margin-bottom: 10px;
+        }
+
+        .import-help {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .word-input {
+                grid-template-columns: 1fr;
+            }
+
+            .word-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .word-actions {
+                justify-content: flex-end;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="#" id="back-btn" class="back-btn">
+                ← Back to Course
+            </a>
+            <div class="lesson-title">
+                <h1 id="lesson-name">Loading...</h1>
+            </div>
+        </div>
+        
+        <div id="error-message" class="error" style="display: none;"></div>
+        
+        <div class="lesson-info">
+            <div id="lesson-stats" class="lesson-stats">Loading lesson information...</div>
+            <div class="action-buttons">
+                <button class="study-btn" onclick="studyLesson()" id="study-btn" disabled>
+                    Study This Lesson
+                </button>
+                <button class="export-btn" onclick="exportWords()" id="export-btn" disabled>
+                    Export Words
+                </button>
+                <button class="import-btn" onclick="document.getElementById('import-file').click()">
+                    Import Words
+                </button>
+            </div>
+        </div>
+
+        <div class="add-word">
+            <h2>Add New Word Pair</h2>
+            <div class="word-input">
+                <input type="text" id="latin-input" placeholder="Latin word(s)" maxlength="100">
+                <input type="text" id="english-input" placeholder="English translation" maxlength="200">
+                <button onclick="addWord()">Add Word</button>
+            </div>
+            
+            <div class="import-section">
+                <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importWords(event)">
+                <div class="import-help">
+                    Import format: Each line should contain: Latin word(s) | English translation<br>
+                    Example: canis | dog<br>
+                    Example: magna casa | big house
+                </div>
+            </div>
+        </div>
+
+        <div class="words-list">
+            <div id="loading" class="loading">Loading words...</div>
+            <div id="words-container"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script src="js/lesson.js"></script>
+</body>
+</html>
