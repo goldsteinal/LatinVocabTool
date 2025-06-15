@@ -1,0 +1,18 @@
+A program to help me learn latin vocabulary. 
+I want to provide a list of pairs of words, 
+a Latin word and its English translation (one or more words). 
+The program will present a Latin word and ask for translation in English, 
+or present English words and ask for latin. 
+Use spaced repetition, focusing on errors. 
+Remember results for next sessions. 
+HTML based, to be run in a browser window standalone. 
+Split in separate HTML files. 
+Hierarchy - "Courses" --> "Lessons" --> "Words", each course contains a number of lessons, each lsson contains word pairs
+Main page - Courses, ability to add, edit course name and delete courses, or load a specific course.
+Course page - ability to add, edit lesson name and delete lessons, or load a specific lesson. also launch study session for all words in the course
+Lesson page - list of word pairs, ability to add, edit or delete. Launch a study session for the specific lesson.
+Firebase hosting and firebase storage, so it can be accessed by any browser
+Words and statistic are saved between sessions.
+Minimal design, minimal amoount of code.
+Split in separate files.
+Don't do anything yet, desctibe how you are going to do it

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Words - Latin Vocabulary Learner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .add-word-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-word-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 2.5rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #f8f9fa;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1rem;
+            border: 2px solid #e0e6ed;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #4ecdc4;
+            color: white;
+            border-color: #4ecdc4;
+        }
+
+        .filter-btn:hover {
+            border-color: #4ecdc4;
+        }
+
+        .words-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 1px solid #dee2e6;
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .word-row {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f4;
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .word-row:hover {
+            background: #f8f9fa;
+        }
+
+        .word-text {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .translation-text {
+            color: #495057;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .difficulty-easy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stats-cell {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .success-rate {
+            font-weight: 600;
+        }
+
+        .success-rate.good {
+            color: #28a745;
+        }
+
+        .success-rate.average {
+            color: #ffc107;
+        }
+
+        .success-rate.poor {
+            color: #dc3545;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+        }
+
+        .empty-state a {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-form input, .modal-form select {
+            padding: 0.8rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .modal-form input:focus, .modal-form select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .modal-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #44a08d;
+        }
+
+        .modal-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #5a6268;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .content {
+                padding: 1.5rem;
+            }
+
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-header, .word-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                text-align: left;
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .word-row {
+                padding: 1.5rem 1rem;
+                border-radius: 10px;
+                margin-bottom: 0.5rem;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+            .word-row > div {
+                margin-bottom: 0.5rem;
+            }
+
+            .word-text::before {
+                content: "Latin: ";
+                font-weight: 400;
+                color: #6c757d;
+            }
+
+            .translation-text::before {
+                content: "English: ";
+                font-weight: 400;
+                color: #6c757d;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .filter-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
+                display: inline-block;
+            }
+
+            .add-word-button {
+                position: static;
+                margin-bottom: 1rem;
+                align-self: center;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="#" id="backButton" class="back-button">← Back to Lessons</a>
+            <button class="add-word-button" onclick="openAddModal()">
+                <span>+</span> Add Word
+            </button>
+            <h1 id="lessonTitle">Loading...</h1>
+            <p>Manage words in this lesson</p>
+        </div>
+
+        <div class="content">
+            <!-- Statistics Overview -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalWords">0</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="studiedWords">0</div>
+                    <div class="stat-label">Words Studied</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgSuccessRate">0%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="wordsToReview">0</div>
+                    <div class="stat-label">Due for Review</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search words...">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="easy">Easy</button>
+                    <button class="filter-btn" data-filter="medium">Medium</button>
+                    <button class="filter-btn" data-filter="hard">Hard</button>
+                    <button class="filter-btn" data-filter="unstudied">Unstudied</button>
+                </div>
+            </div>
+
+            <!-- Words Table -->
+            <div class="words-table">
+                <div class="table-header">
+                    <div>Latin Word</div>
+                    <div>English Translation</div>
+                    <div>Difficulty</div>
+                    <div>Times Studied</div>
+                    <div>Success Rate</div>
+                    <div>Actions</div>
+                </div>
+                
+                <div id="wordsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Loading your vocabulary...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Word Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Word</h3>
+            <form class="modal-form" id="addForm">
+                <input type="text" id="addLatin" placeholder="Latin word" required>
+                <input type="text" id="addEnglish" placeholder="English translation" required>
+                <select id="addDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Add Word</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Word</h3>
+            <form class="modal-form" id="editForm">
+                <input type="hidden" id="editWordId">
+                <input type="text" id="editLatin" placeholder="Latin word" required>
+                <input type="text" id="editEnglish" placeholder="English translation" required>
+                <select id="editDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+let allWords = [];
+let filteredWords = [];
+let currentFilter = 'all';
+let currentLessonId = new URLSearchParams(window.location.search).get('lessonId');
+let currentCourseId = null;
+
+        // DOM elements
+        const wordsContainer = document.getElementById('wordsContainer');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const addModal = document.getElementById('addModal');
+        const editModal = document.getElementById('editModal');
+        const addForm = document.getElementById('addForm');
+        const editForm = document.getElementById('editForm');
+        const notification = document.getElementById('notification');
+
+        // Statistics elements
+        const totalWordsEl = document.getElementById('totalWords');
+        const studiedWordsEl = document.getElementById('studiedWords');
+        const avgSuccessRateEl = document.getElementById('avgSuccessRate');
+        const wordsToReviewEl = document.getElementById('wordsToReview');
+
+        // Get lesson ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        currentLessonId = urlParams.get('lessonId');
+
+        if (!currentLessonId) {
+            alert('No lesson selected');
+            window.location.href = 'manage-courses.html';
+        }
+
+        // Load lesson info and words when page loads
+        window.addEventListener('load', async () => {
+            await loadLessonInfo();
+            await loadWords();
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            filteredWords = allWords.filter(word => 
+                word.latin.toLowerCase().includes(searchTerm) || 
+                word.english.toLowerCase().includes(searchTerm)
+            );
+            renderWords();
+        });
+
+        // Filter functionality
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                applyFilter();
+            });
+        });
+
+        // Add form submission
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addWord();
+        });
+
+        // Edit form submission
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updateWord();
+        });
+
+        async function loadLessonInfo() {
+            try {
+                const lessonDoc = await db.collection('lessons').doc(currentLessonId).get();
+                if (lessonDoc.exists) {
+                    const lessonData = lessonDoc.data();
+                    document.getElementById('lessonTitle').textContent = lessonData.name;
+                    currentCourseId = lessonData.courseId;
+                    
+                    // Update back button to go to lessons page
+                    const backButton = document.getElementById('backButton');
+                    backButton.href = `manage-lessons.html?courseId=${currentCourseId}`;
+                } else {
+                    alert('Lesson not found');
+                    window.location.href = 'manage-courses.html';
+                }
+            } catch (error) {
+                console.error('Error loading lesson info:', error);
+                showNotification('Failed to load lesson information', 'error');
+            }
+        }
+
+        async function loadWords() {
+            try {
+                const snapshot = await db.collection('words')
+                    .where('lessonId', '==', currentLessonId)
+                    .get();
+                
+                allWords = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allWords.push({
+                        id: doc.id,
+                        latin: data.latin,
+                        english: data.english,
+                        difficulty: data.difficulty,
+                        lessonId: data.lessonId,
+                        statistics: data.statistics || {
+                            timesStudied: 0,
+                            timesCorrect: 0,
+                            nextReview: null
+                        }
+                    });
+                });
+                
+                filteredWords = [...allWords];
+                updateStatistics();
+                applyFilter();
+            } catch (error) {
+                console.error('Error loading words:', error);
+                showNotification('Failed to load words. Please check your connection.', 'error');
+                wordsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading words</h3>
+                        <p>Please check your connection and try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function applyFilter() {
+            if (currentFilter === 'all') {
+                filteredWords = [...allWords];
+            } else if (currentFilter === 'unstudied') {
+                filteredWords = allWords.filter(word => word.statistics.timesStudied === 0);
+            } else {
+                filteredWords = allWords.filter(word => word.difficulty === currentFilter);
+            }
+            renderWords();
+        }
+
+        function renderWords() {
+            if (filteredWords.length === 0) {
+                wordsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No words found</h3>
+                        <p>Try adjusting your search or filter, or add some words to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const wordsHTML = filteredWords.map(word => {
+                const successRate = word.statistics.timesStudied > 0 
+                    ? Math.round((word.statistics.timesCorrect / word.statistics.timesStudied) * 100)
+                    : 0;
+                
+                const successRateClass = successRate >= 80 ? 'good' : successRate >= 60 ? 'average' : 'poor';
+                
+                return `
+                    <div class="word-row">
+                        <div class="word-text">${word.latin}</div>
+                        <div class="translation-text">${word.english}</div>
+                        <div><span class="difficulty-badge difficulty-${word.difficulty}">${word.difficulty}</span></div>
+                        <div class="stats-cell">${word.statistics.timesStudied}</div>
+                        <div class="stats-cell"><span class="success-rate ${successRateClass}">${successRate}%</span></div>
+                        <div class="actions">
+                            <button class="action-btn edit-btn" onclick="editWord('${word.id}')">Edit</button>
+                            <button class="action-btn delete-btn" onclick="deleteWord('${word.id}', '${word.latin}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            wordsContainer.innerHTML = wordsHTML;
+        }
+
+        function updateStatistics() {
+            const total = allWords.length;
+            const studied = allWords.filter(word => word.statistics.timesStudied > 0).length;
+            
+            let totalCorrect = 0;
+            let totalStudied = 0;
+            let wordsToReview = 0;
+            const now = new Date();
+
+            allWords.forEach(word => {
+                totalCorrect += word.statistics.timesCorrect;
+                totalStudied += word.statistics.timesStudied;
+                
+                // Check if word is due for review
+                if (word.statistics.nextReview && word.statistics.nextReview.toDate() <= now) {
+                    wordsToReview++;
+                }
+            });
+
+            const avgSuccess = totalStudied > 0 ? Math.round((totalCorrect / totalStudied) * 100) : 0;
+
+            totalWordsEl.textContent = total;
+            studiedWordsEl.textContent = studied;
+            avgSuccessRateEl.textContent = avgSuccess + '%';
+            wordsToReviewEl.textContent = wordsToReview;
+        }
+
+        function openAddModal() {
+            // Clear form
+            document.getElementById('addLatin').value = '';
+            document.getElementById('addEnglish').value = '';
+            document.getElementById('addDifficulty').value = 'medium';
+            
+            addModal.classList.add('show');
+            // Focus on first input
+            setTimeout(() => document.getElementById('addLatin').focus(), 100);
+        }
+
+        function closeAddModal() {
+            addModal.classList.remove('show');
+        }
+
+        async function addWord() {
+            const latin = document.getElementById('addLatin').value.trim();
+            const english = document.getElementById('addEnglish').value.trim();
+            const difficulty = document.getElementById('addDifficulty').value;
+
+            if (!latin || !english) {
+                showNotification('Please fill in both Latin and English fields', 'error');
+                return;
+            }
+
+            // Check for duplicates within this lesson
+            const duplicate = allWords.find(word => 
+                word.latin.toLowerCase() === latin.toLowerCase()
+            );
+
+            if (duplicate) {
+                showNotification('This Latin word already exists in this lesson', 'error');
+                return;
+            }
+
+            try {
+                await db.collection('words').add({
+                    latin: latin,
+                    english: english,
+                    difficulty: difficulty,
+                    lessonId: currentLessonId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    statistics: {
+                        timesStudied: 0,
+                        timesCorrect: 0,
+                        nextReview: null
+                    }
+                });
+
+                closeAddModal();
+                await loadWords(); // Reload to refresh display
+                showNotification('Word added successfully!', 'success');
+            } catch (error) {
+                console.error('Error adding word:', error);
+                showNotification('Failed to add word. Please try again.', 'error');
+            }
+        }
+
+        function editWord(wordId) {
+            const word = allWords.find(w => w.id === wordId);
+            if (!word) return;
+
+            document.getElementById('editWordId').value = wordId;
+            document.getElementById('editLatin').value = word.latin;
+            document.getElementById('editEnglish').value = word.english;
+            document.getElementById('editDifficulty').value = word.difficulty;
+            
+            editModal.classList.add('show');
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove('show');
+        }
+
+        async function updateWord() {
+            const wordId = document.getElementById('editWordId').value;
+            const latin = document.getElementById('editLatin').value.trim();
+            const english = document.getElementById('editEnglish').value.trim();
+            const difficulty = document.getElementById('editDifficulty').value;
+
+            if (!latin || !english) {
+                showNotification('Please fill in both Latin and English fields', 'error');
+                return;
+            }
+
+            // Check for duplicates (excluding current word)
+            const duplicate = allWords.find(word => 
+                word.latin.toLowerCase() === latin.toLowerCase() && word.id !== wordId
+            );
+
+            if (duplicate) {
+                showNotification('This Latin word already exists in this lesson', 'error');
+                return;
+            }
+
+            try {
+                await db.collection('words').doc(wordId).update({
+                    latin: latin,
+                    english: english,
+                    difficulty: difficulty
+                });
+
+                closeEditModal();
+                await loadWords(); // Reload to refresh display
+                showNotification('Word updated successfully!', 'success');
+            } catch (error) {
+                console.error('Error updating word:', error);
+                showNotification('Failed to update word.', 'error');
+            }
+        }
+
+        async function

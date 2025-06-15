@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Lessons - Latin Vocabulary Learner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .course-name {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .add-lesson-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-lesson-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 2.5rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .lesson-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #f1f3f4;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #4ecdc4;
+        }
+
+        .lesson-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-description {
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .lesson-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .lesson-stat {
+            text-align: center;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .lesson-stat-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #4ecdc4;
+            margin-bottom: 0.2rem;
+        }
+
+        .lesson-stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .lesson-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+
+        .lesson-btn {
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .lesson-btn.primary {
+            background: #4ecdc4;
+            color: white;
+            flex: 1;
+        }
+
+        .lesson-btn.primary:hover {
+            background: #44a08d;
+            transform: translateY(-1px);
+        }
+
+        .lesson-btn.secondary {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .lesson-btn.secondary:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .lesson-btn.danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .lesson-btn.danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .lesson-actions-right {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 1rem;
+            color: #495057;
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .empty-state .lesson-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-size: 1.4rem;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-form input, .modal-form textarea {
+            padding: 0.8rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .modal-form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-form input:focus, .modal-form textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .modal-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #44a08d;
+        }
+
+        .modal-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #5a6268;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .content {
+                padding: 1.5rem;
+            }
+
+            .lessons-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .lesson-card {
+                padding: 1.5rem;
+            }
+
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .back-button, .add-lesson-button {
+                position: static;
+                margin-bottom: 1rem;
+            }
+
+            .header {
+                text-align: center;
+                padding: 1.5rem;
+            }
+
+            .lesson-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .lesson-actions-right {
+                justify-content: center;
+            }
+
+            .lesson-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="manage-courses.html" class="back-button">← Courses</a>
+            <button class="add-lesson-button" onclick="openAddModal()">
+                <span>+</span> Add Lesson
+            </button>
+            <div class="course-name" id="courseName">Loading...</div>
+            <h1>Manage Lessons</h1>
+            <p>Organize your vocabulary into lessons</p>
+        </div>
+
+        <div class="content">
+            <!-- Statistics Overview -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalLessons">0</div>
+                    <div class="stat-label">Total Lessons</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalWords">0</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="studiedWords">0</div>
+                    <div class="stat-label">Studied Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedLessons">0</div>
+                    <div class="stat-label">Completed Lessons</div>
+                </div>
+            </div>
+
+            <!-- Lessons Grid -->
+            <div id="lessonsContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading lessons...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Lesson Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Lesson</h3>
+            <form class="modal-form" id="addForm">
+                <input type="text" id="addName" placeholder="Lesson name" required>
+                <textarea id="addDescription" placeholder="Lesson description (optional)"></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Add Lesson</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Lesson Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Lesson</h3>
+            <form class="modal-form" id="editForm">
+                <input type="hidden" id="editLessonId">
+                <input type="text" id="editName" placeholder="Lesson name" required>
+                <textarea id="editDescription" placeholder="Lesson description (optional)"></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="modal-btn primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <script>
+        let currentCourseId = null;
+        let currentCourse = null;
+        let allLessons = [];
+        let lessonsStats = {};
+
+        // DOM elements
+        const lessonsContainer = document.getElementById('lessonsContainer');
+        const addModal = document.getElementById('addModal');
+        const editModal = document.getElementById('editModal');
+        const addForm = document.getElementById('addForm');
+        const editForm = document.getElementById('editForm');
+        const notification = document.getElementById('notification');
+        const courseNameEl = document.getElementById('courseName');
+
+        // Statistics elements
+        const totalLessonsEl = document.getElementById('totalLessons');
+        const totalWordsEl = document.getElementById('totalWords');
+        const studiedWordsEl = document.getElementById('studiedWords');
+        const completedLessonsEl = document.getElementById('completedLessons');
+
+        // Database operations
+        const LessonDB = {
+            coursesCollection: firebase.firestore().collection('courses'),
+            lessonsCollection: firebase.firestore().collection('lessons'),
+            wordsCollection: firebase.firestore().collection('words'),
+
+            async addLesson(courseId, name, description = '') {
+                try {
+                    const lessonData = {
+                        courseId: courseId,
+                        name: name,
+                        description: description,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        order: Date.now() // Simple ordering system
+                    };
+                    
+                    const docRef = await this.lessonsCollection.add(lessonData);
+                    return { success: true, id: docRef.id };
+                } catch (error) {
+                    console.error('Error adding lesson:', error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            async getLessons(courseId) {
+                try {
+                    const snapshot = await this.lessonsCollection
+                        .where('courseId', '==', courseId)
+                        .orderBy('order', 'asc')
+                        .get();
+                    
+                    const lessons = [];
+                    snapshot.forEach(doc => {
+                        lessons.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    
+                    return { success: true, lessons: lessons };
+                } catch (error) {
+                    console.error('Error getting lessons:', error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            async getCourse(courseId) {
+                try {
+                    const doc = await this.coursesCollection.doc(courseId).get();
+                    if (doc.exists) {
+                        return { success: true, course: { id: doc.id, ...doc.data() } };
+                    } else {
+                        return { success: false, error: 'Course not found' };
+                    }
+                } catch (error) {
+                    console.error('Error getting course:', error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            async updateLesson(lessonId, data) {
+                try {
+                    await this.lessonsCollection.doc(lessonId).update(data);
+                    return { success: true };
+                } catch (error) {
+                    console.error('Error updating lesson:', error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            async deleteLesson(lessonId) {
+                try {
+                    // Delete all words in this lesson
+                    const wordsSnapshot = await this.wordsCollection.where('lessonId', '==', lessonId).get();
+                    
+                    const batch = firebase.firestore().batch();
+                    
+                    wordsSnapshot.forEach(wordDoc => {
+                        batch.delete(wordDoc.ref);
+                    });
+                    
+                    // Delete the lesson
+                    batch.delete(this.lessonsCollection.doc(lessonId));
+                    
+                    await batch.commit();
+                    return { success: true };
+                } catch (error) {
+                    console.error('Error deleting lesson:', error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            async getLessonStats(lessonId) {
+                try {
+                    const wordsSnapshot = await this.wordsCollection.where('lessonId', '==', lessonId).get();
+                    
+                    let wordCount = wordsSnapshot.size;
+                    let studiedWords = 0;
+                    let masteredWords = 0;
+                    
+                    wordsSnapshot.forEach(wordDoc => {
+                        const wordData = wordDoc.data();
+                        if (wordData.statistics && wordData.statistics.timesStudied > 0) {
+                            studiedWords++;
+                            if (wordData.statistics.correctStreak >= 3) {
+                                masteredWords++;
+                            }
+                        }
+                    });
+                    
+                    return {
+                        success: true,
+                        stats: {
+                            wordCount,
+                            studiedWords,
+                            masteredWords,
+                            progress: wordCount > 0 ? Math.round((studiedWords / wordCount) * 100) : 0
+                        }
+                    };
+                } catch (error) {
+                    console.error('Error getting lesson stats:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+        };
+
+        // Get course ID from URL parameters
+        function getCourseIdFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('courseId');
+        }
+
+        // Load lessons when page loads
+        window.addEventListener('load', async () => {
+            currentCourseId = getCourseIdFromURL();
+            if (!currentCourseId) {
+                showNotification('No course selected', 'error');
+                setTimeout(() => {
+                    window.location.href = 'manage-courses.html';
+                }, 2000);
+                return;
+            }
+            
+            await loadCourse();
+            await loadLessons();
+        });
+
+        // Add form submission
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addLesson();
+        });
+
+        // Edit form submission
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updateLesson();
+        });
+
+        async function loadCourse() {
+            try {
+                const result = await LessonDB.getCourse(currentCourseId);
+                if (result.success) {
+                    currentCourse = result.course;
+                    courseNameEl.textContent = currentCourse.name;
+                    document.title = `${currentCourse.name} - Manage Lessons`;
+                } else {
+                    showNotification('Course not found: ' + result.error, 'error');
+                    setTimeout(() => {
+                        window.location.href = 'manage-courses.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error loading course:', error);
+                showNotification('Failed to load course.', 'error');
+            }
+        }
+
+        async function loadLessons() {
+            try {
+                const result = await LessonDB.getLessons(currentCourseId);
+                if (result.success) {
+                    allLessons = result.lessons;
+                    await loadLessonStats();
+                    renderLessons();
+                    updateGlobalStatistics();
+                } else {
+                    showNotification('Failed to load lessons: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+                showNotification('Failed to load lessons. Please check your connection.', 'error');
+            }
+        }
+
+        async function loadLessonStats() {
+            for (const lesson of allLessons) {
+                const statsResult = await LessonDB.getLessonStats(lesson.id);
+                if (statsResult.success) {
+                    lessonsStats[lesson.id] = statsResult.stats;
+                } else {
+                    lessonsStats[lesson.id] = {
+                        wordCount: 0,
+                        studiedWords: 0,
+                        masteredWords: 0,
+                        progress: 0
+                    };
+                }
+            }
+        }
+
+        function renderLessons() {
+            if (allLessons.length === 0) {
+                lessonsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No lessons yet</h3>
+                        <p>Create your first lesson to start adding vocabulary words.</p>
+                        <button class="lesson-btn primary" onclick="openAddModal()">
+                            + Add Your First Lesson
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const lessonsHTML = allLessons.map(lesson => {
+                const stats = lessonsStats[lesson.id] || { wordCount: 0, studiedWords: 0, masteredWords: 0, progress: 0 };
+                
+                return `
+                    <div class="lesson-card">
+                        <div class="lesson-header">
+                            <div>
+                                <div class="lesson-title">${lesson.name}</div>
+                                <div class="lesson-description">${lesson.description || 'No description'}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="lesson-stats">
+                            <div class="lesson-stat">
+                                <div class="lesson-stat-number">${stats.wordCount}</div>
+                                <div class="lesson-stat-label">Words</div>
+                            </div>
+                            <div class="lesson-stat">
+                                <div class="lesson-stat-number">${stats.studiedWords}</div>
+                                <div class="lesson-stat-label">Studied</div>
+                            </div>
+                            <div class="lesson-stat">
+                                <div class="lesson-stat-number">${stats.masteredWords}</div>
+                                <div class="lesson-stat-label">Mastered</div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${stats.progress}%"></div>
+                        </div>
+                        
+                        <div class="lesson-actions">
+                            <a href="manage-words.html?lessonId=${lesson.id}" class="lesson-btn primary">
+                                Manage Words
+                            </a>
+                            <div class="lesson-actions-right">
+                                <button class="lesson-btn secondary" onclick="editLesson('${lesson.id}')">Edit</button>
+                                <button class="lesson-btn danger" onclick="deleteLesson('${lesson.id}', '${lesson.name}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lessonsContainer.innerHTML = `<div class="lessons-grid">${lessonsHTML}</div>`;
+        }
+
+        function updateGlobalStatistics() {
+            const totalLessons = allLessons.length;
+            let totalWords = 0;
+            let totalStudiedWords = 0;
+            let completedLessons = 0;
+
+            Object.values(lessonsStats).forEach(stats => {
+                totalWords += stats.wordCount;
+                totalStudiedWords += stats.studiedWords;
+                if (stats.progress === 100) {
+                    completedLessons++;
+                }
+            });
+
+            totalLessonsEl.textContent = totalLessons;
+            totalWordsEl.textContent = totalWords;
+            studiedWordsEl.textContent = totalStudiedWords;
+            completedLessonsEl.textContent = completedLessons;
+        }
+
+        function openAddModal() {
+            document.getElementById('addName').value = '';
+            document.getElementById('addDescription').value = '';
+            addModal.classList.add('show');
+            setTimeout(() => document.getElementById('addName').focus(), 100);
+        }
+
+        function closeAddModal() {
+            addModal.classList.remove('show');
+        }
+
+        async function addLesson() {
+            const name = document.getElementById('addName').value.trim();
+            const description = document.getElementById('addDescription').value.trim();
+
+            if (!name) {
+                showNotification('Please enter a lesson name', 'error');
+                return;
+            }
+
+            // Check for duplicates
+            const duplicate = allLessons.find(lesson => 
+                lesson.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (duplicate) {
+                showNotification('A lesson with this name already exists', 'error');
+                return;
+            }
+
+            try {
+                const result = await LessonDB.addLesson(currentCourseId, name, description);
+                if (result.success) {
+                    closeAddModal();
+                    await loadLessons();
+                    showNotification('Lesson added successfully!', 'success');
+                } else {
+                    showNotification('Failed to add lesson: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding lesson:', error);
+                showNotification('Failed to add lesson. Please try again.', 'error');
+            }
+        }
+
+        function editLesson(lessonId) {
+            const lesson = allLessons.find(l => l.id === lessonId);
+            if (!lesson) return;
+
+            document.getElementById('editLessonId').value = lessonId;
+            document.getElementById('editName').value = lesson.name;
+            document.getElementById('editDescription').value = lesson.description || '';
+            
+            editModal.classList.add('show');
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove('show');
+        }
+
+        async function updateLesson() {
+            const lessonId = document.getElementById('editLessonId').value;
+            const name = document.getElementById('editName').value.trim();
+            const description = document.getElementById('editDescription').value.trim();
+
+            if (!name) {
+                showNotification('Please enter a lesson name', 'error');
+                return;
+            }
+
+            // Check for duplicates (excluding current lesson)
+            const duplicate = allLessons.find(lesson => 
+                lesson.name.toLowerCase() === name.toLowerCase() && lesson.id !== lessonId
+            );
+
+            if (duplicate) {
+                showNotification('A lesson with this name already exists', 'error');
+                return;
+            }
+
+            

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latin Vocabulary Learner</title>
+    <title>Latin Vocabulary Learning</title>
     <style>
         * {
             margin: 0;
@@ -12,163 +12,185 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
             color: #333;
+            line-height: 1.6;
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
             text-align: center;
-            max-width: 500px;
-            width: 90%;
-            margin: 2rem;
-        }
-
-        .header {
-            margin-bottom: 2.5rem;
-        }
-
-        .title {
-            font-size: 2.5rem;
-            font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: #7f8c8d;
+            margin-bottom: 30px;
             font-weight: 300;
         }
 
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+        .add-course {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
         }
 
-        .menu-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .add-course h2 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        .course-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #3498db;
             color: white;
             border: none;
-            padding: 1.2rem 2rem;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button.delete {
+            background: #e74c3c;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        button.delete:hover {
+            background: #c0392b;
+        }
+
+        button.edit {
+            background: #f39c12;
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        button.edit:hover {
+            background: #e67e22;
+        }
+
+        .courses-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .course-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 0.8rem;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .menu-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        .course-item:last-child {
+            border-bottom: none;
         }
 
-        .menu-button:active {
-            transform: translateY(0);
+        .course-info {
+            flex: 1;
+            cursor: pointer;
         }
 
-        .menu-button.add-words {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            box-shadow: 0 4px 15px rgba(86, 171, 47, 0.3);
+        .course-name {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 5px;
         }
 
-        .menu-button.add-words:hover {
-            box-shadow: 0 8px 25px rgba(86, 171, 47, 0.4);
+        .course-stats {
+            color: #7f8c8d;
+            font-size: 0.9em;
         }
 
-        .menu-button.study {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        .course-actions {
+            display: flex;
+            gap: 5px;
         }
 
-        .menu-button.study:hover {
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
         }
 
-        .menu-button.manage {
-            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        .menu-button.manage:hover {
-            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        .edit-mode input {
+            margin-right: 10px;
         }
 
-        .icon {
-            font-size: 1.3rem;
-        }
-
-        .footer {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #ecf0f1;
-            color: #95a5a6;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 2rem;
-                margin: 1rem;
+        @media (max-width: 600px) {
+            .course-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
 
-            .title {
-                font-size: 2rem;
-            }
-
-            .menu-button {
-                padding: 1rem 1.5rem;
-                font-size: 1rem;
+            .course-actions {
+                width: 100%;
+                justify-content: flex-end;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1 class="title">Latin Vocabulary</h1>
-            <p class="subtitle">Master Latin with spaced repetition</p>
+        <h1>Latin Vocabulary Learning</h1>
+        
+        <div id="error-message" class="error" style="display: none;"></div>
+        
+        <div class="add-course">
+            <h2>Add New Course</h2>
+            <div class="course-input">
+                <input type="text" id="course-name" placeholder="Course name (e.g., 'Basic Latin', 'Advanced Grammar')" maxlength="50">
+                <button onclick="addCourse()">Add Course</button>
+            </div>
         </div>
 
-        <div class="menu-buttons">
-            <a href="add-words.html" class="menu-button add-words">
-                <span class="icon">➕</span>
-                <span>Add Words</span>
-            </a>
-
-            <a href="study.html" class="menu-button study">
-                <span class="icon">📚</span>
-                <span>Study</span>
-            </a>
-
-            <a href="manage-words.html" class="menu-button manage">
-                <span class="icon">⚙️</span>
-                <span>Manage Words</span>
-            </a>
-        </div>
-
-        <div class="footer">
-            <p>Build your Latin vocabulary with intelligent spaced repetition</p>
+        <div class="courses-list">
+            <div id="loading" class="loading">Loading courses...</div>
+            <div id="courses-container"></div>
         </div>
     </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script src="js/main.js"></script>
 </body>
 </html>
