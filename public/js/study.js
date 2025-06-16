@@ -155,9 +155,13 @@ function startSession() {
     updateProgress();
 }
 
-// Select words for session using spaced repetition
+// Select words for session using spaced repetition - ALWAYS 10 questions
 function selectWordsForSession() {
-    const maxWords = Math.min(10, words.length);
+    const targetQuestions = 10;
+    
+    if (words.length === 0) {
+        return [];
+    }
     
     // Sort words by priority (incorrect words first, then by difficulty)
     const sortedWords = [...words].sort((a, b) => {
@@ -176,7 +180,61 @@ function selectWordsForSession() {
         return aLastStudied - bLastStudied;
     });
     
-    return sortedWords.slice(0, maxWords);
+    const selectedWords = [];
+    
+    // If we have enough unique words, select them randomly
+    if (sortedWords.length >= targetQuestions) {
+        // Shuffle the sorted words to add randomness while keeping priority
+        const shuffled = [...sortedWords];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.slice(0, targetQuestions);
+    }
+    
+    // If we have fewer words than target questions, create a weighted random distribution
+    const wordPool = [];
+    
+    // Calculate how many times each word should appear (with randomness)
+    const baseCount = Math.floor(targetQuestions / sortedWords.length);
+    const remainder = targetQuestions % sortedWords.length;
+    
+    // Add base count for each word
+    sortedWords.forEach(word => {
+        for (let i = 0; i < baseCount; i++) {
+            wordPool.push({
+                ...word,
+                instanceId: `${word.id}_${i}`
+            });
+        }
+    });
+    
+    // Randomly distribute the remaining questions
+    const remainingWords = [...sortedWords];
+    for (let i = 0; i < remainder; i++) {
+        const randomIndex = Math.floor(Math.random() * remainingWords.length);
+        const selectedWord = remainingWords[randomIndex];
+        
+        wordPool.push({
+            ...selectedWord,
+            instanceId: `${selectedWord.id}_${baseCount + i}`
+        });
+        
+        // Remove word from remaining pool to avoid over-concentration
+        // but only if we have more words than remaining slots
+        if (remainingWords.length > remainder - i) {
+            remainingWords.splice(randomIndex, 1);
+        }
+    }
+    
+    // Shuffle the final word pool to randomize question order
+    for (let i = wordPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [wordPool[i], wordPool[j]] = [wordPool[j], wordPool[i]];
+    }
+    
+    return wordPool;
 }
 
 // Show current question
@@ -280,7 +338,12 @@ function handleIncorrectAnswer(word) {
     answerInput.classList.add('incorrect');
     answerInput.disabled = true;
     
-    incorrectWords.push(word);
+    // Only add to incorrect words if it's not already there (to handle repeated words)
+    const existingIncorrect = incorrectWords.find(w => w.id === word.id);
+    if (!existingIncorrect) {
+        incorrectWords.push(word);
+    }
+    
     isWaitingForNext = true;
     
     const correctAnswer = studyMode === 'eng-lat' ? word.latin : word.english;
