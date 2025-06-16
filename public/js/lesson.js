@@ -73,8 +73,10 @@ async function loadLesson() {
 // Load words from Firebase
 async function loadWords() {
     try {
+        // Order by timestamp to maintain consistent order
         const snapshot = await db.collection('courses').doc(courseId)
-            .collection('lessons').doc(lessonId).collection('words').get();
+            .collection('lessons').doc(lessonId).collection('words')
+            .orderBy('timestamp', 'asc').get();
         
         words = {};
         snapshot.forEach(doc => {
@@ -101,7 +103,15 @@ function displayWords() {
         return;
     }
 
-    Object.values(words).forEach(word => {
+    // Sort words by timestamp to maintain consistent order
+    const sortedWords = Object.values(words).sort((a, b) => {
+        // Use timestamp for reliable ordering
+        const timeA = a.timestamp || 0;
+        const timeB = b.timestamp || 0;
+        return timeA - timeB;
+    });
+
+    sortedWords.forEach(word => {
         const wordElement = createWordElement(word);
         container.appendChild(wordElement);
     });
@@ -161,11 +171,14 @@ async function addWord() {
     }
 
     try {
+        const timestamp = Date.now(); // Use numeric timestamp for reliable ordering
+        
         const docRef = await db.collection('courses').doc(courseId)
             .collection('lessons').doc(lessonId).collection('words').add({
                 latin: latin,
                 english: english,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                timestamp: timestamp, // Add numeric timestamp for ordering
                 difficulty: 0,
                 lastStudied: null,
                 correctCount: 0,
@@ -176,6 +189,7 @@ async function addWord() {
             id: docRef.id,
             latin: latin,
             english: english,
+            timestamp: timestamp,
             difficulty: 0,
             correctCount: 0,
             incorrectCount: 0
@@ -251,8 +265,15 @@ function exportWords() {
         return;
     }
     
+    // Sort words for export to maintain consistent order
+    const sortedWords = Object.values(words).sort((a, b) => {
+        const timeA = a.timestamp || 0;
+        const timeB = b.timestamp || 0;
+        return timeA - timeB;
+    });
+    
     let content = '';
-    Object.values(words).forEach(word => {
+    sortedWords.forEach(word => {
         content += `${word.latin} | ${word.english}\n`;
     });
     
@@ -287,11 +308,14 @@ async function importWords(event) {
             
             if (parts.length >= 2 && parts[0] && parts[1]) {
                 try {
+                    const timestamp = Date.now() + imported; // Ensure unique timestamps for imported words
+                    
                     const docRef = await db.collection('courses').doc(courseId)
                         .collection('lessons').doc(lessonId).collection('words').add({
                             latin: parts[0],
                             english: parts[1],
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            timestamp: timestamp,
                             difficulty: 0,
                             lastStudied: null,
                             correctCount: 0,
@@ -302,6 +326,7 @@ async function importWords(event) {
                         id: docRef.id,
                         latin: parts[0],
                         english: parts[1],
+                        timestamp: timestamp,
                         difficulty: 0,
                         correctCount: 0,
                         incorrectCount: 0

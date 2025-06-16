@@ -63,7 +63,9 @@ async function loadCourse() {
 // Load lessons from Firebase
 async function loadLessons() {
     try {
-        const snapshot = await db.collection('courses').doc(courseId).collection('lessons').get();
+        // Order by timestamp (numeric) to maintain consistent order
+        const snapshot = await db.collection('courses').doc(courseId).collection('lessons')
+            .orderBy('timestamp', 'asc').get();
         lessons = {};
         
         // Load lessons and count words in each
@@ -101,7 +103,15 @@ function displayLessons() {
         return;
     }
 
-    Object.values(lessons).forEach(lesson => {
+    // Sort lessons by timestamp to maintain consistent order
+    const sortedLessons = Object.values(lessons).sort((a, b) => {
+        // Use timestamp for reliable ordering
+        const timeA = a.timestamp || 0;
+        const timeB = b.timestamp || 0;
+        return timeA - timeB;
+    });
+
+    sortedLessons.forEach(lesson => {
         const lessonElement = createLessonElement(lesson);
         container.appendChild(lessonElement);
     });
@@ -161,16 +171,20 @@ async function addLesson() {
     }
 
     try {
+        const timestamp = Date.now(); // Use numeric timestamp for reliable ordering
+        
         const docRef = await db.collection('courses').doc(courseId).collection('lessons').add({
             name: name,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            timestamp: timestamp, // Add numeric timestamp for ordering
             wordCount: 0
         });
         
         lessons[docRef.id] = {
             id: docRef.id,
             name: name,
-            wordCount: 0
+            wordCount: 0,
+            timestamp: timestamp
         };
         
         nameInput.value = '';
