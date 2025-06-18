@@ -223,6 +223,7 @@
     	    justify-content: space-between;
             align-items: flex-start;
     	    gap: 20px;
+            position: relative; /* Add this line to existing .word-item rule */
         }
 
         .word-item:last-child {
@@ -232,7 +233,23 @@
         .word-item.noun {
             background: #f8f9ff;
         }
+.declension-table-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    margin-top: 5px;
+}
 
+.declension-table-container .declension-table {
+    margin: 0;
+    box-shadow: none;
+}
         .latin-word {
             font-weight: 500;
             color: #2c3e50;

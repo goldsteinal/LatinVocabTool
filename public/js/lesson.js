@@ -181,18 +181,20 @@ function createDeclensionTable(declension, wordId) {
     });
     
     return `
-        <table class="declension-table" id="declension-${wordId}" style="display: none;">
-            <thead>
-                <tr>
-                    <th>Case</th>
-                    <th>Singular</th>
-                    <th>Plural</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-        </table>
+        <div class="declension-table-container" id="declension-${wordId}" style="display: none;">
+            <table class="declension-table">
+                <thead>
+                    <tr>
+                        <th>Case</th>
+                        <th>Singular</th>
+                        <th>Plural</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </div>
     `;
 }
 
