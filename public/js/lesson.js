@@ -17,6 +17,7 @@ let courseId = null;
 let lessonId = null;
 let lesson = null;
 let words = {};
+let currentEditingWord = null;
 
 // Get parameters from URL
 function getUrlParams() {
@@ -120,24 +121,104 @@ function displayWords() {
 // Create word element
 function createWordElement(word) {
     const div = document.createElement('div');
-    div.className = 'word-item';
+    div.className = `word-item${word.isNoun ? ' noun' : ''}`;
+    
+    let declensionTable = '';
+    if (word.isNoun && word.declension) {
+        declensionTable = createDeclensionTable(word.declension, word.id);
+    }
+  // Build action buttons - always 4 buttons for alignment
+let actionButtons = `
+    <button class="edit" onclick="editWord('${word.id}')">Edit</button>
+    <button class="delete" onclick="deleteWord('${word.id}')">Delete</button>
+`;
+
+if (word.isNoun) {
+    actionButtons += `
+        <button class="symbol-btn" onclick="editDeclension('${word.id}')" title="Edit Declension">📝</button>
+        <button class="symbol-btn show-declension" onclick="toggleDeclension('${word.id}')" title="Show Declension">👁️</button>
+    `;
+} else {
+    actionButtons += `
+        <button class="symbol-btn invisible" style="visibility: hidden;">📝</button>
+        <button class="symbol-btn invisible" style="visibility: hidden;">👁️</button>
+    `;
+}
+    
     div.innerHTML = `
-        <div class="latin-word">${escapeHtml(word.latin)}</div>
+        <div class="latin-word">
+            <div class="latin-word-content">
+                <span>${word.latin}</span>
+            </div>
+            ${word.isNoun ? '<div class="noun-indicator">noun</div>' : ''}
+        </div>
         <div class="english-word">${escapeHtml(word.english)}</div>
         <div class="word-actions">
-            <button class="edit" onclick="editWord('${word.id}')">Edit</button>
-            <button class="delete" onclick="deleteWord('${word.id}')">Delete</button>
+            ${actionButtons}
         </div>
+        ${declensionTable}
     `;
+    
     return div;
+}
+
+// Create declension table HTML
+function createDeclensionTable(declension, wordId) {
+    const cases = ['nominative', 'genitive', 'dative', 'accusative', 'ablative'];
+    let tableRows = '';
+    
+    cases.forEach(caseName => {
+        const caseData = declension[caseName];
+        if (caseData) {
+            tableRows += `
+                <tr>
+                    <td class="case-name">${capitalize(caseName)}</td>
+                    <td>${caseData.singular || '—'}</td>
+                    <td>${caseData.plural || '—'}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    return `
+        <table class="declension-table" id="declension-${wordId}" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Case</th>
+                    <th>Singular</th>
+                    <th>Plural</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    `;
+}
+
+// Toggle declension table visibility
+function toggleDeclension(wordId) {
+    const table = document.getElementById(`declension-${wordId}`);
+    const button = table.parentElement.querySelector('.show-declension');
+    
+    if (table.style.display === 'none') {
+        table.style.display = 'table';
+        button.innerHTML = '🙈';
+        button.title = 'Hide Declension';
+    } else {
+        table.style.display = 'none';
+        button.innerHTML = '👁️';
+        button.title = 'Show Declension';
+    }
 }
 
 // Update lesson statistics
 function updateLessonStats() {
     const wordCount = Object.keys(words).length;
+    const nounCount = Object.values(words).filter(word => word.isNoun).length;
     
     const statsElement = document.getElementById('lesson-stats');
-    statsElement.textContent = `${wordCount} word pairs`;
+    statsElement.textContent = `${wordCount} word pairs${nounCount > 0 ? ` (${nounCount} nouns)` : ''}`;
     
     // Enable/disable buttons based on word count
     const studyBtn = document.getElementById('study-btn');
@@ -161,49 +242,81 @@ function updateLessonStats() {
 async function addWord() {
     const latinInput = document.getElementById('latin-input');
     const englishInput = document.getElementById('english-input');
+    const nounCheckbox = document.getElementById('noun-checkbox');
     
     const latin = latinInput.value.trim();
     const english = englishInput.value.trim();
+    const isNoun = nounCheckbox.checked;
     
     if (!latin || !english) {
         showError('Please enter both Latin and English words.');
         return;
     }
 
+    // Show loading if fetching declension
+    if (isNoun) {
+        showDeclensionLoading();
+    }
+
     try {
-        const timestamp = Date.now(); // Use numeric timestamp for reliable ordering
+        const timestamp = Date.now();
+        let wordData = {
+            latin: latin,
+            english: english,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            timestamp: timestamp,
+            difficulty: 0,
+            lastStudied: null,
+            correctCount: 0,
+            incorrectCount: 0,
+            isNoun: isNoun
+        };
+
+        // Fetch declension if it's a noun
+        if (isNoun) {
+            try {
+                const declension = await fetchLatinDeclension(latin);
+                if (declension && declension.length > 0) {
+                    wordData.declension = convertDeclensionArrayToObject(declension);
+                }
+            } catch (declensionError) {
+                console.log('Failed to fetch declension:', declensionError);
+                // Continue without declension data
+            }
+        }
         
         const docRef = await db.collection('courses').doc(courseId)
-            .collection('lessons').doc(lessonId).collection('words').add({
-                latin: latin,
-                english: english,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                timestamp: timestamp, // Add numeric timestamp for ordering
-                difficulty: 0,
-                lastStudied: null,
-                correctCount: 0,
-                incorrectCount: 0
-            });
+            .collection('lessons').doc(lessonId).collection('words').add(wordData);
         
         words[docRef.id] = {
             id: docRef.id,
-            latin: latin,
-            english: english,
-            timestamp: timestamp,
-            difficulty: 0,
-            correctCount: 0,
-            incorrectCount: 0
+            ...wordData
         };
         
         latinInput.value = '';
         englishInput.value = '';
+        nounCheckbox.checked = false;
         
         displayWords();
         updateLessonStats();
         hideError();
     } catch (error) {
         showError('Failed to add word. Please try again.');
+    } finally {
+        hideDeclensionLoading();
     }
+}
+
+// Convert declension array to object format for storage
+function convertDeclensionArrayToObject(declensionArray) {
+    const declensionObj = {};
+    declensionArray.forEach(item => {
+        declensionObj[item.case] = {
+            singular: item.singular,
+            plural: item.plural
+        };
+    });
+    return declensionObj;
 }
 
 // Edit word pair
@@ -216,19 +329,43 @@ async function editWord(wordId) {
     const newEnglish = prompt('Enter English translation:', word.english);
     if (newEnglish === null) return;
     
-    if (newLatin.trim() && newEnglish.trim() && 
-        (newLatin.trim() !== word.latin || newEnglish.trim() !== word.english)) {
-        
+    const wasNoun = word.isNoun;
+    const isNoun = confirm('Is this a noun?');
+    
+    if (newLatin.trim() && newEnglish.trim()) {
         try {
+            let updateData = {
+                latin: newLatin.trim(),
+                english: newEnglish.trim(),
+                isNoun: isNoun
+            };
+
+            // If changing from non-noun to noun, or Latin word changed for noun
+            if (isNoun && (!wasNoun || newLatin.trim() !== word.latin)) {
+                try {
+                    const declension = await fetchLatinDeclension(newLatin.trim());
+                    if (declension && declension.length > 0) {
+                        updateData.declension = convertDeclensionArrayToObject(declension);
+                    }
+                } catch (declensionError) {
+                    console.log('Failed to fetch declension:', declensionError);
+                }
+            }
+
+            // If changing from noun to non-noun, remove declension
+            if (!isNoun && wasNoun) {
+                updateData.declension = firebase.firestore.FieldValue.delete();
+            }
+            
             await db.collection('courses').doc(courseId)
                 .collection('lessons').doc(lessonId)
-                .collection('words').doc(wordId).update({
-                    latin: newLatin.trim(),
-                    english: newEnglish.trim()
-                });
+                .collection('words').doc(wordId).update(updateData);
             
-            words[wordId].latin = newLatin.trim();
-            words[wordId].english = newEnglish.trim();
+            // Update local copy
+            Object.assign(words[wordId], updateData);
+            if (!isNoun && wasNoun) {
+                delete words[wordId].declension;
+            }
             
             displayWords();
             hideError();
@@ -236,6 +373,79 @@ async function editWord(wordId) {
             showError('Failed to update word.');
         }
     }
+}
+
+// Edit declension in modal
+function editDeclension(wordId) {
+    const word = words[wordId];
+    if (!word.isNoun) return;
+    
+    currentEditingWord = wordId;
+    const modal = document.getElementById('declension-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const form = document.getElementById('declension-form');
+    
+    modalTitle.textContent = `Edit Declension - ${word.latin}`;
+    
+    // Create form fields
+    const cases = ['nominative', 'genitive', 'dative', 'accusative', 'ablative'];
+    form.innerHTML = '';
+    
+    cases.forEach(caseName => {
+        const caseData = word.declension ? word.declension[caseName] : {};
+        
+        const formRow = document.createElement('div');
+        formRow.className = 'form-row';
+        formRow.innerHTML = `
+            <label>${capitalize(caseName)}</label>
+            <input type="text" id="edit-${caseName}-singular" placeholder="Singular" value="${caseData.singular || ''}" />
+            <input type="text" id="edit-${caseName}-plural" placeholder="Plural" value="${caseData.plural || ''}" />
+        `;
+        form.appendChild(formRow);
+    });
+    
+    modal.style.display = 'flex';
+}
+
+// Save declension changes
+async function saveDeclension() {
+    if (!currentEditingWord) return;
+    
+    const cases = ['nominative', 'genitive', 'dative', 'accusative', 'ablative'];
+    const declension = {};
+    
+    cases.forEach(caseName => {
+        const singular = document.getElementById(`edit-${caseName}-singular`).value.trim();
+        const plural = document.getElementById(`edit-${caseName}-plural`).value.trim();
+        
+        if (singular || plural) {
+            declension[caseName] = {
+                singular: singular,
+                plural: plural
+            };
+        }
+    });
+    
+    try {
+        await db.collection('courses').doc(courseId)
+            .collection('lessons').doc(lessonId)
+            .collection('words').doc(currentEditingWord).update({
+                declension: declension
+            });
+        
+        words[currentEditingWord].declension = declension;
+        displayWords();
+        closeDeclensionModal();
+        hideError();
+    } catch (error) {
+        showError('Failed to save declension.');
+    }
+}
+
+// Close declension modal
+function closeDeclensionModal() {
+    document.getElementById('declension-modal').style.display = 'none';
+    currentEditingWord = null;
 }
 
 // Delete word pair
@@ -274,7 +484,7 @@ function exportWords() {
     
     let content = '';
     sortedWords.forEach(word => {
-        content += `${word.latin} | ${word.english}\n`;
+        content += `${word.latin} | ${word.english}${word.isNoun ? ' | NOUN' : ''}\n`;
     });
     
     const blob = new Blob([content], { type: 'text/plain' });
@@ -308,28 +518,39 @@ async function importWords(event) {
             
             if (parts.length >= 2 && parts[0] && parts[1]) {
                 try {
-                    const timestamp = Date.now() + imported; // Ensure unique timestamps for imported words
+                    const timestamp = Date.now() + imported;
+                    const isNoun = parts.length > 2 && parts[2].toUpperCase() === 'NOUN';
+                    
+                    let wordData = {
+                        latin: parts[0],
+                        english: parts[1],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        timestamp: timestamp,
+                        difficulty: 0,
+                        lastStudied: null,
+                        correctCount: 0,
+                        incorrectCount: 0,
+                        isNoun: isNoun
+                    };
+
+                    // Fetch declension if it's a noun
+                    if (isNoun) {
+                        try {
+                            const declension = await fetchLatinDeclension(parts[0]);
+                            if (declension && declension.length > 0) {
+                                wordData.declension = convertDeclensionArrayToObject(declension);
+                            }
+                        } catch (declensionError) {
+                            console.log('Failed to fetch declension for', parts[0]);
+                        }
+                    }
                     
                     const docRef = await db.collection('courses').doc(courseId)
-                        .collection('lessons').doc(lessonId).collection('words').add({
-                            latin: parts[0],
-                            english: parts[1],
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            timestamp: timestamp,
-                            difficulty: 0,
-                            lastStudied: null,
-                            correctCount: 0,
-                            incorrectCount: 0
-                        });
+                        .collection('lessons').doc(lessonId).collection('words').add(wordData);
                     
                     words[docRef.id] = {
                         id: docRef.id,
-                        latin: parts[0],
-                        english: parts[1],
-                        timestamp: timestamp,
-                        difficulty: 0,
-                        correctCount: 0,
-                        incorrectCount: 0
+                        ...wordData
                     };
                     
                     imported++;
@@ -361,6 +582,15 @@ function studyLesson() {
     window.location.href = `study.html?courseId=${courseId}&lessonId=${lessonId}`;
 }
 
+// Show/hide declension loading
+function showDeclensionLoading() {
+    document.getElementById('declension-loading').style.display = 'block';
+}
+
+function hideDeclensionLoading() {
+    document.getElementById('declension-loading').style.display = 'none';
+}
+
 // Utility functions
 function showError(message) {
     const errorDiv = document.getElementById('error-message');
@@ -379,6 +609,10 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 // Handle Enter key in inputs
 document.getElementById('latin-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
@@ -389,5 +623,12 @@ document.getElementById('latin-input').addEventListener('keypress', function(e) 
 document.getElementById('english-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         addWord();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('declension-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeclensionModal();
     }
 });

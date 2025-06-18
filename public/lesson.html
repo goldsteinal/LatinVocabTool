@@ -131,6 +131,37 @@
             margin-bottom: 10px;
         }
 
+        .noun-checkbox-container {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .noun-checkbox {
+            margin: 0;
+        }
+
+        .noun-checkbox-label {
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .declension-loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
         input {
             padding: 10px;
             border: 1px solid #ddd;
@@ -188,19 +219,38 @@
         .word-item {
             padding: 15px 20px;
             border-bottom: 1px solid #eee;
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 20px;
-            align-items: center;
+    	    display: flex;
+    	    justify-content: space-between;
+            align-items: flex-start;
+    	    gap: 20px;
         }
 
         .word-item:last-child {
             border-bottom: none;
         }
 
+        .word-item.noun {
+            background: #f8f9ff;
+        }
+
         .latin-word {
             font-weight: 500;
             color: #2c3e50;
+            position: relative;
+    	    display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+	.latin-word-content {
+    		display: block;
+	}
+
+        .noun-indicator {
+            font-size: 12px;
+            color: #8b5cf6;
+            font-style: italic;
+            margin-top: 4px;
         }
 
         .english-word {
@@ -208,8 +258,76 @@
         }
 
         .word-actions {
-            display: flex;
-            gap: 5px;
+    		display: flex;
+    		gap: 5px;
+    		align-items: flex-start;
+    		flex-shrink: 0;
+        }
+
+        .declension-toggle:hover {
+            background: #7c3aed;
+        }
+
+.symbol-btn {
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.symbol-btn:hover {
+    background: #7c3aed;
+}
+
+.symbol-btn.show-declension {
+    background: #8b5cf6;
+}
+
+.symbol-btn.show-declension:hover {
+    background: #7c3aed;
+}
+
+        .declension-table {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+
+        .declension-table th {
+            background-color: #8b5cf6;
+            color: white;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .declension-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .declension-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .case-name {
+            font-weight: 500;
+            color: #8b5cf6;
         }
 
         .loading {
@@ -225,6 +343,7 @@
             border-radius: 4px;
             margin-bottom: 20px;
             text-align: center;
+            display: none;
         }
 
         .import-section {
@@ -241,6 +360,97 @@
             font-size: 0.9em;
             color: #7f8c8d;
             margin-top: 10px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            background: #c0392b;
+        }
+
+        .declension-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-row label {
+            font-weight: 500;
+            color: #555;
+            text-transform: capitalize;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .save-btn {
+            background: #27ae60;
+        }
+
+        .save-btn:hover {
+            background: #229954;
+        }
+
+        .cancel-btn {
+            background: #95a5a6;
+        }
+
+        .cancel-btn:hover {
+            background: #7f8c8d;
         }
 
         @media (max-width: 600px) {
@@ -261,10 +471,20 @@
 
             .word-actions {
                 justify-content: flex-end;
+                flex-direction: row;
             }
 
             .action-buttons {
                 flex-direction: column;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+
+            .form-row label {
+                font-size: 14px;
             }
         }
     </style>
@@ -280,7 +500,7 @@
             </div>
         </div>
         
-        <div id="error-message" class="error" style="display: none;"></div>
+        <div id="error-message" class="error"></div>
         
         <div class="lesson-info">
             <div id="lesson-stats" class="lesson-stats">Loading lesson information...</div>
@@ -302,14 +522,24 @@
             <div class="word-input">
                 <input type="text" id="latin-input" placeholder="Latin word(s)" maxlength="100">
                 <input type="text" id="english-input" placeholder="English translation" maxlength="200">
-                <button onclick="addWord()">Add Word</button>
+                <button onclick="addWord()" id="add-word-btn">Add Word</button>
+                
+                <div class="noun-checkbox-container">
+                    <input type="checkbox" id="noun-checkbox" class="noun-checkbox">
+                    <label for="noun-checkbox" class="noun-checkbox-label">This is a noun (fetch declension)</label>
+                </div>
+                
+                <div id="declension-loading" class="declension-loading">
+                    Fetching declension from Wiktionary...
+                </div>
             </div>
             
             <div class="import-section">
                 <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="importWords(event)">
                 <div class="import-help">
-                    Import format: Each line should contain: Latin word(s) | English translation<br>
+                    Import format: Each line should contain: Latin word(s) | English translation | NOUN (optional)<br>
                     Example: canis | dog<br>
+                    Example: rosa | rose | NOUN<br>
                     Example: magna casa | big house
                 </div>
             </div>
@@ -321,10 +551,30 @@
         </div>
     </div>
 
+    <!-- Declension Edit Modal -->
+    <div id="declension-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Edit Declension</h3>
+                <button class="modal-close" onclick="closeDeclensionModal()">×</button>
+            </div>
+            <div class="declension-form" id="declension-form">
+                <!-- Form content will be populated by JavaScript -->
+            </div>
+            <div class="form-actions">
+                <button class="save-btn" onclick="saveDeclension()">Save Changes</button>
+                <button class="cancel-btn" onclick="closeDeclensionModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
+    <!-- Include the declension utility -->
+    <script src="js/declension.js"></script>
+    <!-- Main lesson script -->
     <script src="js/lesson.js"></script>
 </body>
 </html>
