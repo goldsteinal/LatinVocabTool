@@ -192,13 +192,17 @@ function generateQuestion() {
 // Reset question UI
 function resetQuestionUI() {
     // Clear nominative input
-    document.getElementById('nominative-answer').value = '';
+    const nominativeInput = document.getElementById('nominative-answer');
+    nominativeInput.value = '';
+    nominativeInput.style.borderColor = '';
+    nominativeInput.style.backgroundColor = '';
+    nominativeInput.placeholder = 'e.g., puella, rex, corpus';
     
     // Reset all checkboxes and styling
     document.querySelectorAll('.case-option').forEach(option => {
         const checkbox = option.querySelector('input[type="checkbox"]');
         checkbox.checked = false;
-        option.classList.remove('selected', 'correct', 'incorrect');
+        option.classList.remove('selected', 'correct', 'incorrect', 'missed');
     });
 }
 
@@ -235,11 +239,11 @@ function checkAnswer() {
     // Update UI with feedback
     provideFeedback(nominativeCorrect, caseCorrect, correctSelections);
     
-    // Update score
+// Update score - both nominative AND all cases must be correct
     if (nominativeCorrect && caseCorrect) {
         score++;
     }
-    
+
     // Show next button or finish session
     if (currentQuestion >= totalQuestions) {
         setTimeout(() => {
@@ -286,7 +290,7 @@ function provideFeedback(nominativeCorrect, caseCorrect, correctSelections) {
         nominativeInput.placeholder = `Correct: ${currentWord.latin}`;
     }
     
-    // Color case options
+// Color case options
     document.querySelectorAll('.case-option').forEach(option => {
         const checkbox = option.querySelector('input[type="checkbox"]');
         const isSelected = checkbox.checked;
@@ -299,21 +303,31 @@ function provideFeedback(nominativeCorrect, caseCorrect, correctSelections) {
         } else if (isSelected && !isCorrect) {
             option.classList.add('incorrect');
         } else if (!isSelected && isCorrect) {
-            option.classList.add('correct');
-            // Check the correct box to show what should have been selected
+            option.classList.add('missed');
+            // Check the box to show what should have been selected
             checkbox.checked = true;
         }
     });
 }
 
-// Compare two arrays for equality
+// Compare two arrays for equality - must have exactly the same selections
 function arraysEqual(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
     
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i].case !== arr2[i].case || arr1[i].number !== arr2[i].number) {
-            return false;
-        }
+    // Check if every item in arr1 exists in arr2
+    for (let item1 of arr1) {
+        const found = arr2.some(item2 => 
+            item1.case === item2.case && item1.number === item2.number
+        );
+        if (!found) return false;
+    }
+    
+    // Check if every item in arr2 exists in arr1
+    for (let item2 of arr2) {
+        const found = arr1.some(item1 => 
+            item1.case === item2.case && item1.number === item2.number
+        );
+        if (!found) return false;
     }
     
     return true;
