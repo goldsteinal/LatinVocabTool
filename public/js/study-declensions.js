@@ -120,7 +120,7 @@ async function loadNouns() {
         }
         
         // Adjust total questions if we have fewer nouns
-        totalQuestions = Math.min(10, nouns.length * 3); // Up to 3 questions per noun
+        totalQuestions = Math.min(10, nouns.length * 6); // Up to 6 questions per noun
         
         document.getElementById('loading').style.display = 'none';
         document.getElementById('study-card').style.display = 'flex';
@@ -133,17 +133,17 @@ async function loadNouns() {
 
 // Start a new question
 function startNewQuestion() {
-    currentQuestion++;
     hasAnswered = false;
-    
-    // Update progress
-    updateProgress();
     
     // Reset UI
     resetQuestionUI();
     
     // Generate new question
     generateQuestion();
+    
+    // Update progress (increment currentQuestion here)
+    currentQuestion++;
+    updateProgress();
     
     // Show check answer button, hide next button
     document.getElementById('check-answer-btn').style.display = 'inline-block';
@@ -244,15 +244,24 @@ function checkAnswer() {
         score++;
     }
 
-    // Show next button or finish session
-    if (currentQuestion >= totalQuestions) {
+ // Show next button or finish session
+if (currentQuestion >= totalQuestions) {
+    setTimeout(() => {
+        showResults();
+    }, 2000);
+} else {
+    // Auto-advance to next question after 1 second if answer is correct
+    if (nominativeCorrect && caseCorrect) {
+        document.getElementById('check-answer-btn').style.display = 'none';
+        document.getElementById('next-question-btn').style.display = 'none';
         setTimeout(() => {
-            showResults();
-        }, 2000);
+            nextQuestion();
+        }, 1000);
     } else {
         document.getElementById('check-answer-btn').style.display = 'none';
         document.getElementById('next-question-btn').style.display = 'inline-block';
     }
+}
 }
 
 // Get all correct cases for a given form
@@ -343,7 +352,7 @@ function updateProgress() {
     const progressPercent = (currentQuestion / totalQuestions) * 100;
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
     document.getElementById('progress-text').textContent = `Question ${currentQuestion} of ${totalQuestions}`;
-    document.getElementById('score-text').textContent = `Score: ${score}/${currentQuestion - 1}`;
+    document.getElementById('score-text').textContent = `Score: ${score}/${currentQuestion}`;
 }
 
 // Show final results
