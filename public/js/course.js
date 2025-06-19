@@ -72,15 +72,24 @@ async function loadLessons() {
         for (const doc of snapshot.docs) {
             const lessonData = doc.data();
             
-            // Count words in this lesson
-            const wordsSnapshot = await db.collection('courses').doc(courseId)
-                .collection('lessons').doc(doc.id).collection('words').get();
-            
-            lessons[doc.id] = {
-                id: doc.id,
-                ...lessonData,
-                wordCount: wordsSnapshot.size
-            };
+            // Count words and nouns in this lesson
+const wordsSnapshot = await db.collection('courses').doc(courseId)
+    .collection('lessons').doc(doc.id).collection('words').get();
+
+let nounCount = 0;
+wordsSnapshot.forEach(doc => {
+    const wordData = doc.data();
+    if (wordData.isNoun === true) {
+        nounCount++;
+    }
+});
+
+lessons[doc.id] = {
+    id: doc.id,
+    ...lessonData,
+    wordCount: wordsSnapshot.size,
+    nounCount: nounCount
+};
         }
         
         displayLessons();
@@ -141,19 +150,23 @@ function createLessonElement(lesson) {
 function updateCourseStats() {
     const lessonCount = Object.keys(lessons).length;
     const totalWords = Object.values(lessons).reduce((sum, lesson) => sum + (lesson.wordCount || 0), 0);
+    const totalNouns = Object.values(lessons).reduce((sum, lesson) => sum + (lesson.nounCount || 0), 0);
     
     const statsElement = document.getElementById('course-stats');
-    statsElement.textContent = `${lessonCount} lessons • ${totalWords} words total`;
+    statsElement.textContent = `${lessonCount} lessons • ${totalWords} words total • ${totalNouns} nouns`;
     
-    // Enable/disable study all button
+    // Enable/disable study buttons
     const studyBtn = document.getElementById('study-all-btn');
+    const declensionsBtn = document.getElementById('study-declensions-btn');
     studyBtn.disabled = totalWords === 0;
+    declensionsBtn.disabled = totalNouns === 0;
     
     // Update course in Firebase with current stats
     if (course) {
         db.collection('courses').doc(courseId).update({
             lessonCount: lessonCount,
-            wordCount: totalWords
+            wordCount: totalWords,
+            nounCount: totalNouns
         }).catch(error => {
             console.log('Failed to update course stats:', error);
         });
@@ -259,6 +272,11 @@ function studyLesson(lessonId) {
 // Study entire course
 function studyCourse() {
     window.location.href = `study.html?courseId=${courseId}`;
+}
+
+// Study noun declensions for the course
+function studyNounDeclensions() {
+    window.location.href = `study-declensions.html?courseId=${courseId}&lessonId=`;
 }
 
 // Utility functions
