@@ -93,16 +93,16 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 30px;
+            padding: 25px;
             margin-bottom: 20px;
-            min-height: 500px;
+            min-height: 400px;
             display: flex;
             flex-direction: column;
         }
 
         .question-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .question-text {
@@ -112,11 +112,11 @@
         }
 
         .latin-word {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             color: #2c3e50;
-            margin: 20px 0;
-            padding: 20px;
+            margin: 15px 0;
+            padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #3498db;
@@ -126,25 +126,33 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
         }
 
         .nominative-input {
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .nominative-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .nominative-input label {
-            display: block;
             font-size: 16px;
             font-weight: 500;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin: 0;
+            white-space: nowrap;
         }
 
         .nominative-input input {
-            width: 100%;
-            max-width: 300px;
-            padding: 12px;
+            width: 250px;
+            padding: 10px;
             border: 2px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
@@ -154,6 +162,27 @@
         .nominative-input input:focus {
             outline: none;
             border-color: #3498db;
+        }
+
+        .nominative-check-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            background: #3498db;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .nominative-check-btn:hover {
+            background: #2980b9;
+        }
+
+        .nominative-check-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
         }
 
         .case-selection {
@@ -170,14 +199,14 @@
         .cases-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
             max-width: 500px;
         }
 
         .case-option {
             display: flex;
             align-items: center;
-            padding: 10px 12px;
+            padding: 8px 10px;
             background: #f8f9fa;
             border: 2px solid #e9ecef;
             border-radius: 6px;
@@ -225,7 +254,7 @@
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .btn {
@@ -327,6 +356,22 @@
                 padding: 15px;
             }
 
+            .nominative-input {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .nominative-input-group {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nominative-input input {
+                width: 100%;
+            }
+
             .cases-grid {
                 grid-template-columns: 1fr;
                 max-width: none;
@@ -376,7 +421,10 @@
             <div class="answer-section">
                 <div class="nominative-input">
                     <label for="nominative-answer">Enter the nominative singular form:</label>
-                    <input type="text" id="nominative-answer" placeholder="e.g., puella, rex, corpus">
+                    <div class="nominative-input-group">
+                        <input type="text" id="nominative-answer" placeholder="e.g., puella, rex, corpus">
+                        <button id="check-answer-btn" class="nominative-check-btn">Check Answer</button>
+                    </div>
                 </div>
 
                 <div class="case-selection">
@@ -427,7 +475,6 @@
             </div>
 
             <div class="action-buttons">
-                <button id="check-answer-btn" class="btn btn-primary">Check Answer</button>
                 <button id="next-question-btn" class="btn btn-success" style="display: none;">Next Question</button>
             </div>
         </div>
