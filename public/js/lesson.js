@@ -11,6 +11,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
 let courseId = null;
@@ -28,8 +29,42 @@ function getUrlParams() {
     };
 }
 
-// Initialize app
+// Initialize app with authentication
 document.addEventListener('DOMContentLoaded', function() {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log('User signed in:', user.uid);
+            showApp();
+            initializeLesson();
+        } else {
+            console.log('No user, signing in anonymously...');
+            autoSignIn();
+        }
+    });
+});
+
+// Automatic anonymous sign-in
+function autoSignIn() {
+    auth.signInAnonymously()
+        .then(() => {
+            console.log('Anonymous sign-in successful');
+            showApp();
+            initializeLesson();
+        })
+        .catch((error) => {
+            console.error('Anonymous sign-in failed:', error.message);
+            document.getElementById('auth-loading').innerHTML = 'Sign-in failed. Please refresh the page.';
+        });
+}
+
+// Show the app content
+function showApp() {
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+}
+
+// Initialize lesson after authentication
+function initializeLesson() {
     const params = getUrlParams();
     courseId = params.courseId;
     lessonId = params.lessonId;
@@ -47,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadLesson();
     loadWords();
-});
+}
 
 // Load lesson information
 async function loadLesson() {

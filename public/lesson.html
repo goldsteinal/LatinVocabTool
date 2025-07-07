@@ -507,16 +507,21 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="#" id="back-btn" class="back-btn">
-                ← Back to Course
+ <div id="auth-loading" class="loading">Signing in...</div>
+    
+    <div id="app-content" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <a href="#" id="back-btn" class="back-btn">
+                    ← Back to Course
             </a>
             <div class="lesson-title">
                 <h1 id="lesson-name">Loading...</h1>
             </div>
         </div>
-        
+        </div>
+        </div>
+
         <div id="error-message" class="error"></div>
         
         <div class="lesson-info">
@@ -587,6 +592,7 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- Include the declension utility -->
