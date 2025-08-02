@@ -190,88 +190,6 @@ function startSession() {
     updateProgress();
 }
 
-// Select words for session using spaced repetition - ALWAYS 10 questions
-function selectWordsForSession() {
-    const targetQuestions = 10;
-    
-    if (words.length === 0) {
-        return [];
-    }
-    
-    // Sort words by priority (incorrect words first, then by difficulty)
-    const sortedWords = [...words].sort((a, b) => {
-        const aDifficulty = (a.incorrectCount || 0) - (a.correctCount || 0);
-        const bDifficulty = (b.incorrectCount || 0) - (b.correctCount || 0);
-        
-        // Prioritize words with higher difficulty (more incorrect answers)
-        if (aDifficulty !== bDifficulty) {
-            return bDifficulty - aDifficulty;
-        }
-        
-        // Then by last studied (least recently studied first)
-        const aLastStudied = a.lastStudied ? a.lastStudied.toDate() : new Date(0);
-        const bLastStudied = b.lastStudied ? b.lastStudied.toDate() : new Date(0);
-        
-        return aLastStudied - bLastStudied;
-    });
-    
-    const selectedWords = [];
-    
-    // If we have enough unique words, select them randomly
-    if (sortedWords.length >= targetQuestions) {
-        // Shuffle the sorted words to add randomness while keeping priority
-        const shuffled = [...sortedWords];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled.slice(0, targetQuestions);
-    }
-    
-    // If we have fewer words than target questions, create a weighted random distribution
-    const wordPool = [];
-    
-    // Calculate how many times each word should appear (with randomness)
-    const baseCount = Math.floor(targetQuestions / sortedWords.length);
-    const remainder = targetQuestions % sortedWords.length;
-    
-    // Add base count for each word
-    sortedWords.forEach(word => {
-        for (let i = 0; i < baseCount; i++) {
-            wordPool.push({
-                ...word,
-                instanceId: `${word.id}_${i}`
-            });
-        }
-    });
-    
-    // Randomly distribute the remaining questions
-    const remainingWords = [...sortedWords];
-    for (let i = 0; i < remainder; i++) {
-        const randomIndex = Math.floor(Math.random() * remainingWords.length);
-        const selectedWord = remainingWords[randomIndex];
-        
-        wordPool.push({
-            ...selectedWord,
-            instanceId: `${selectedWord.id}_${baseCount + i}`
-        });
-        
-        // Remove word from remaining pool to avoid over-concentration
-        // but only if we have more words than remaining slots
-        if (remainingWords.length > remainder - i) {
-            remainingWords.splice(randomIndex, 1);
-        }
-    }
-    
-    // Shuffle the final word pool to randomize question order
-    for (let i = wordPool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [wordPool[i], wordPool[j]] = [wordPool[j], wordPool[i]];
-    }
-    
-    return wordPool;
-}
-
 // Show current question
 function showQuestion() {
     if (currentQuestion >= sessionWords.length) {
@@ -468,29 +386,6 @@ function setMode(mode) {
     showQuestion();
 }
 
-// Update word statistics in Firebase
-async function updateWordStats(word, isCorrect) {
-    try {
-        const wordRef = db.collection('courses').doc(courseId)
-            .collection('lessons').doc(word.lessonId)
-            .collection('words').doc(word.id);
-        
-        const updateData = {
-            lastStudied: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        if (isCorrect) {
-            updateData.correctCount = firebase.firestore.FieldValue.increment(1);
-        } else {
-            updateData.incorrectCount = firebase.firestore.FieldValue.increment(1);
-        }
-        
-        await wordRef.update(updateData);
-    } catch (error) {
-        console.log('Failed to update word stats:', error);
-    }
-}
-
 // Show results screen
 function showResults() {
     document.getElementById('question-screen').style.display = 'none';
@@ -558,4 +453,188 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Enhanced spaced repetition algorithm for vocabulary learning
+
+
+// Calculate word priority for selection with more balanced weighting
+function calculateWordPriority(word) {
+    const now = new Date();
+    const timesAsked = word.timesAsked || 0;
+    const correctCount = word.correctCount || 0;
+    const incorrectCount = word.incorrectCount || 0;
+    const lastStudied = word.lastStudied ? word.lastStudied.toDate() : new Date(0);
+    
+    // Start with base priority
+    let priority = 100;
+    
+    // 1. Never studied words get moderate boost (not overwhelming)
+    if (timesAsked === 0) {
+        priority += 50;
+    }
+    
+    // 2. Recently incorrect words get priority
+    if (incorrectCount > correctCount) {
+        priority += 30;
+    }
+    
+    // 3. Words not studied recently get priority
+    const daysSinceStudied = (now - lastStudied) / (1000 * 60 * 60 * 24);
+    if (daysSinceStudied > 1) {
+        priority += Math.min(daysSinceStudied * 5, 25);
+    }
+    
+    // 4. Low success rate words get some priority
+    if (timesAsked > 0) {
+        const successRate = correctCount / timesAsked;
+        if (successRate < 0.5) {
+            priority += 20;
+        } else if (successRate < 0.7) {
+            priority += 10;
+        }
+    }
+    
+    // 5. Large random component for variety (most important!)
+    priority += Math.random() * 100;
+    
+    return priority;
+}
+// Select words for session using spaced repetition - ALWAYS 10 questions
+function selectWordsForSession() {
+    const targetQuestions = 10;
+    
+    if (words.length === 0) {
+        return [];
+    }
+    
+    // Track words used in recent sessions (simulate session memory)
+    if (!window.recentlyUsedWords) {
+        window.recentlyUsedWords = new Map();
+    }
+    
+    // Clean up old entries (older than 10 minutes)
+    const currentSession = Date.now();
+    for (let [wordId, sessionTime] of window.recentlyUsedWords.entries()) {
+        if (currentSession - sessionTime > 1000 * 60 * 10) { // 10 minutes ago
+            window.recentlyUsedWords.delete(wordId);
+        }
+    }
+    
+    // Calculate priority for each word with recency penalty
+    const wordsWithPriority = words.map(word => {
+        let priority = calculateWordPriority(word);
+        
+        // Reduce priority for recently used words
+        if (window.recentlyUsedWords.has(word.id)) {
+            priority *= 0.3; // Strong penalty for recently used words
+        }
+        
+        return {
+            ...word,
+            priority
+        };
+    });
+    
+    // Sort by priority (highest first)
+    wordsWithPriority.sort((a, b) => b.priority - a.priority);
+    
+    const selectedWords = [];
+    const usedWordIds = new Set();
+    
+    // First pass: select unique words up to target or available words
+    for (const word of wordsWithPriority) {
+        if (selectedWords.length >= targetQuestions) break;
+        if (usedWordIds.has(word.id)) continue;
+        
+        selectedWords.push({
+            ...word,
+            instanceId: `${word.id}_0`
+        });
+        usedWordIds.add(word.id);
+        
+        // Mark as recently used
+        window.recentlyUsedWords.set(word.id, currentSession);
+    }
+    
+    // Second pass: if we need more questions, allow repeats of high-priority words
+    if (selectedWords.length < targetQuestions && words.length > 0) {
+        let attempts = 0;
+        const maxAttempts = targetQuestions * 2;
+        
+        while (selectedWords.length < targetQuestions && attempts < maxAttempts) {
+            // Re-randomize priorities for variety
+            const randomizedWords = wordsWithPriority.map(word => ({
+                ...word,
+                priority: calculateWordPriority(word) // Recalculate with new random component
+            })).sort((a, b) => b.priority - a.priority);
+            
+            for (const word of randomizedWords) {
+                if (selectedWords.length >= targetQuestions) break;
+                
+                // Count how many times this word is already selected
+                const currentCount = selectedWords.filter(w => w.id === word.id).length;
+                const maxRepetitions = Math.min(3, Math.ceil(targetQuestions / words.length) + 1);
+                
+                if (currentCount < maxRepetitions) {
+                    selectedWords.push({
+                        ...word,
+                        instanceId: `${word.id}_${currentCount}`
+                    });
+                }
+            }
+            attempts++;
+        }
+    }
+    
+    // Final shuffle for question order variety
+    return shuffleArray(selectedWords.slice(0, targetQuestions));
+}
+
+// Utility function to shuffle array
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// Enhanced function to update word statistics (simplified for better real-time performance)
+async function updateWordStats(word, isCorrect) {
+    try {
+        const wordRef = db.collection('courses').doc(courseId)
+            .collection('lessons').doc(word.lessonId)
+            .collection('words').doc(word.id);
+        
+        const updateData = {
+            lastStudied: firebase.firestore.FieldValue.serverTimestamp(),
+            timesAsked: firebase.firestore.FieldValue.increment(1)
+        };
+        
+        if (isCorrect) {
+            updateData.correctCount = firebase.firestore.FieldValue.increment(1);
+        } else {
+            updateData.incorrectCount = firebase.firestore.FieldValue.increment(1);
+        }
+        
+        // Update Firebase (async, don't wait)
+        wordRef.update(updateData).catch(error => {
+            console.log('Failed to update word stats:', error);
+        });
+        
+        // Update local word object immediately for better selection
+        word.timesAsked = (word.timesAsked || 0) + 1;
+        word.lastStudied = { toDate: () => new Date() };
+        
+        if (isCorrect) {
+            word.correctCount = (word.correctCount || 0) + 1;
+        } else {
+            word.incorrectCount = (word.incorrectCount || 0) + 1;
+        }
+        
+    } catch (error) {
+        console.log('Failed to update word stats:', error);
+    }
 }
