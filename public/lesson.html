@@ -94,7 +94,17 @@
         .study-btn:hover {
             background: #229954;
         }
+#study-difficult-btn {
+    background: #e67e22 !important;
+}
 
+#study-difficult-btn:hover {
+    background: #d35400 !important;
+}
+
+#study-difficult-btn:disabled {
+    background: #bdc3c7 !important;
+}
         .export-btn, .import-btn {
             background: #3498db;
             color: white;
@@ -526,17 +536,20 @@
         
         <div class="lesson-info">
             <div id="lesson-stats" class="lesson-stats">Loading lesson information...</div>
-            <div class="action-buttons">
-                <button class="study-btn" onclick="studyLesson()" id="study-btn" disabled>
-                    Study This Lesson
-                </button>
-                <button class="export-btn" onclick="exportWords()" id="export-btn" disabled>
-                    Export Words
-                </button>
-                <button class="import-btn" onclick="document.getElementById('import-file').click()">
-                    Import Words
-                </button>
-            </div>
+     <div class="action-buttons">
+    <button class="study-btn" onclick="studyLesson()" id="study-btn" disabled>
+        Study This Lesson
+    </button>
+    <button class="study-btn" onclick="studyDifficultWords()" id="study-difficult-btn" disabled style="background: #e67e22;">
+        Study Difficult Words
+    </button>
+    <button class="export-btn" onclick="exportWords()" id="export-btn" disabled>
+        Export Words
+    </button>
+    <button class="import-btn" onclick="document.getElementById('import-file').click()">
+        Import Words
+    </button>
+</div>
         </div>
 
         <div class="add-word">

@@ -17,6 +17,7 @@ const db = firebase.firestore();
 let courseId = null;
 let course = null;
 let lessons = {};
+let difficultWordsCount = 0;
 
 // Get course ID from URL parameters
 function getCourseIdFromUrl() {
@@ -107,15 +108,19 @@ async function loadLessons() {
         for (const doc of snapshot.docs) {
             const lessonData = doc.data();
             
-            // Count words and nouns in this lesson
+// Count words and nouns in this lesson
 const wordsSnapshot = await db.collection('courses').doc(courseId)
     .collection('lessons').doc(doc.id).collection('words').get();
 
 let nounCount = 0;
+let difficultCount = 0;
 wordsSnapshot.forEach(doc => {
     const wordData = doc.data();
     if (wordData.isNoun === true) {
         nounCount++;
+    }
+    if (wordData.isDifficult === true) {
+        difficultCount++;
     }
 });
 
@@ -123,7 +128,8 @@ lessons[doc.id] = {
     id: doc.id,
     ...lessonData,
     wordCount: wordsSnapshot.size,
-    nounCount: nounCount
+    nounCount: nounCount,
+    difficultCount: difficultCount
 };
         }
         
@@ -186,14 +192,18 @@ function updateCourseStats() {
     const lessonCount = Object.keys(lessons).length;
     const totalWords = Object.values(lessons).reduce((sum, lesson) => sum + (lesson.wordCount || 0), 0);
     const totalNouns = Object.values(lessons).reduce((sum, lesson) => sum + (lesson.nounCount || 0), 0);
+    difficultWordsCount = Object.values(lessons).reduce((sum, lesson) => sum + (lesson.difficultCount || 0), 0);
     
     const statsElement = document.getElementById('course-stats');
-    statsElement.textContent = `${lessonCount} lessons • ${totalWords} words total • ${totalNouns} nouns`;
+    const difficultText = difficultWordsCount > 0 ? ` • ${difficultWordsCount} difficult words` : '';
+    statsElement.textContent = `${lessonCount} lessons • ${totalWords} words total • ${totalNouns} nouns${difficultText}`;
     
     // Enable/disable study buttons
     const studyBtn = document.getElementById('study-all-btn');
+    const difficultBtn = document.getElementById('study-difficult-btn');
     const declensionsBtn = document.getElementById('study-declensions-btn');
     studyBtn.disabled = totalWords === 0;
+    difficultBtn.disabled = difficultWordsCount === 0;
     declensionsBtn.disabled = totalNouns === 0;
     
     // Update course in Firebase with current stats
@@ -201,7 +211,8 @@ function updateCourseStats() {
         db.collection('courses').doc(courseId).update({
             lessonCount: lessonCount,
             wordCount: totalWords,
-            nounCount: totalNouns
+            nounCount: totalNouns,
+            difficultWordsCount: difficultWordsCount
         }).catch(error => {
             console.log('Failed to update course stats:', error);
         });
@@ -330,6 +341,11 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Study difficult words from entire course
+function studyDifficultWords() {
+    window.location.href = `study.html?courseId=${courseId}&mode=difficult`;
 }
 
 // Handle Enter key in input

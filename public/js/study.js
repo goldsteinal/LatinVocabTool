@@ -24,13 +24,15 @@ let correctAnswers = 0;
 let incorrectWords = [];
 let sessionWords = [];
 let isWaitingForNext = false;
+let studyDifficultMode = false;
 
 // Get parameters from URL
 function getUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
     return {
         courseId: urlParams.get('courseId'),
-        lessonId: urlParams.get('lessonId')
+        lessonId: urlParams.get('lessonId'),
+        mode: urlParams.get('mode')
     };
 }
 
@@ -70,10 +72,12 @@ function showApp() {
 
 // Initialize study after authentication
 function initializeStudy() {
-    const params = getUrlParams();
-    courseId = params.courseId;
-    lessonId = params.lessonId;
-    
+
+const params = getUrlParams();
+courseId = params.courseId;
+lessonId = params.lessonId;
+studyDifficultMode = params.mode === 'difficult';
+
     if (!courseId) {
         showError('Invalid study parameters. Redirecting to courses.');
         setTimeout(() => {
@@ -134,12 +138,19 @@ async function loadWords() {
                     .collection('lessons').doc(lessonDoc.id).collection('words').get();
                 
                 wordsSnapshot.forEach(doc => {
-                    words.push({ id: doc.id, lessonId: lessonDoc.id, ...doc.data() });
+                    const wordData = { id: doc.id, lessonId: lessonDoc.id, ...doc.data() };
+                    // Filter for difficult words if in difficult mode
+                    if (!studyDifficultMode || wordData.isDifficult === true) {
+                        words.push(wordData);
+                    }
                 });
             }
             
             if (words.length === 0) {
-                showError('No words found for studying.');
+                const errorMsg = studyDifficultMode ? 
+                    'No difficult words found for studying.' : 
+                    'No words found for studying.';
+                showError(errorMsg);
                 return;
             }
             
@@ -150,11 +161,18 @@ async function loadWords() {
         const snapshot = await wordsQuery.get();
         words = [];
         snapshot.forEach(doc => {
-            words.push({ id: doc.id, lessonId: lessonId, ...doc.data() });
+            const wordData = { id: doc.id, lessonId: lessonId, ...doc.data() };
+            // Filter for difficult words if in difficult mode
+            if (!studyDifficultMode || wordData.isDifficult === true) {
+                words.push(wordData);
+            }
         });
         
         if (words.length === 0) {
-            showError('No words found for studying.');
+            const errorMsg = studyDifficultMode ? 
+                'No difficult words found for studying.' : 
+                'No words found for studying.';
+            showError(errorMsg);
             return;
         }
         
@@ -184,7 +202,13 @@ function startSession() {
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('question-screen').style.display = 'block';
     document.getElementById('results-screen').style.display = 'none';
-    
+
+    // Update page title based on study mode
+if (studyDifficultMode) {
+    document.title = 'Studying Difficult Words - Latin Vocabulary';
+    // You could also update a header element if you have one
+}
+
     // Start first question
     showQuestion();
     updateProgress();
@@ -615,8 +639,22 @@ async function updateWordStats(word, isCorrect) {
         
         if (isCorrect) {
             updateData.correctCount = firebase.firestore.FieldValue.increment(1);
+            
+            // Handle difficult word tracking for correct answers
+            const consecutiveCorrect = (word.consecutiveCorrect || 0) + 1;
+            updateData.consecutiveCorrect = consecutiveCorrect;
+            
+            // Remove from difficult if 3 consecutive correct answers
+            if (consecutiveCorrect >= 3 && word.isDifficult === true) {
+                updateData.isDifficult = false;
+                updateData.consecutiveCorrect = 0;
+            }
         } else {
             updateData.incorrectCount = firebase.firestore.FieldValue.increment(1);
+            
+            // Mark as difficult and reset consecutive correct count
+            updateData.isDifficult = true;
+            updateData.consecutiveCorrect = 0;
         }
         
         // Update Firebase (async, don't wait)
@@ -630,8 +668,17 @@ async function updateWordStats(word, isCorrect) {
         
         if (isCorrect) {
             word.correctCount = (word.correctCount || 0) + 1;
+            word.consecutiveCorrect = (word.consecutiveCorrect || 0) + 1;
+            
+            // Update difficult status locally
+            if (word.consecutiveCorrect >= 3 && word.isDifficult === true) {
+                word.isDifficult = false;
+                word.consecutiveCorrect = 0;
+            }
         } else {
             word.incorrectCount = (word.incorrectCount || 0) + 1;
+            word.isDifficult = true;
+            word.consecutiveCorrect = 0;
         }
         
     } catch (error) {

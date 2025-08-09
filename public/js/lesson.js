@@ -19,6 +19,7 @@ let lessonId = null;
 let lesson = null;
 let words = {};
 let currentEditingWord = null;
+let difficultWordsCount = 0;
 
 // Get parameters from URL
 function getUrlParams() {
@@ -114,11 +115,18 @@ async function loadWords() {
             .collection('lessons').doc(lessonId).collection('words')
             .orderBy('timestamp', 'asc').get();
         
-        words = {};
-        snapshot.forEach(doc => {
-            words[doc.id] = { id: doc.id, ...doc.data() };
-        });
-        
+words = {};
+difficultWordsCount = 0;
+
+snapshot.forEach(doc => {
+    const wordData = { id: doc.id, ...doc.data() };
+    words[doc.id] = wordData;
+    
+    // Count difficult words
+    if (wordData.isDifficult === true) {
+        difficultWordsCount++;
+    }
+});        
         displayWords();
         updateLessonStats();
     } catch (error) {
@@ -253,15 +261,19 @@ function toggleDeclension(wordId) {
 function updateLessonStats() {
     const wordCount = Object.keys(words).length;
     const nounCount = Object.values(words).filter(word => word.isNoun).length;
+    difficultWordsCount = Object.values(words).filter(word => word.isDifficult === true).length;
     
     const statsElement = document.getElementById('lesson-stats');
-    statsElement.textContent = `${wordCount} word pairs${nounCount > 0 ? ` (${nounCount} nouns)` : ''}`;
+    const difficultText = difficultWordsCount > 0 ? ` • ${difficultWordsCount} difficult` : '';
+    statsElement.textContent = `${wordCount} word pairs${nounCount > 0 ? ` (${nounCount} nouns)` : ''}${difficultText}`;
     
     // Enable/disable buttons based on word count
     const studyBtn = document.getElementById('study-btn');
+    const difficultBtn = document.getElementById('study-difficult-btn');
     const exportBtn = document.getElementById('export-btn');
     
     studyBtn.disabled = wordCount === 0;
+    difficultBtn.disabled = difficultWordsCount === 0;
     exportBtn.disabled = wordCount === 0;
     
     // Update lesson word count in Firebase
@@ -275,6 +287,33 @@ function updateLessonStats() {
     }
 }
 
+// Refresh all word data from database
+async function refreshWordsData() {
+    try {
+        const snapshot = await db.collection('courses').doc(courseId)
+            .collection('lessons').doc(lessonId).collection('words')
+            .orderBy('timestamp', 'asc').get();
+        
+        words = {};
+        difficultWordsCount = 0;
+        
+        snapshot.forEach(doc => {
+            const wordData = { id: doc.id, ...doc.data() };
+            words[doc.id] = wordData;
+            
+            if (wordData.isDifficult === true) {
+                difficultWordsCount++;
+            }
+        });
+        
+        // Update displays
+        displayWords();
+        updateLessonStats();
+        
+    } catch (error) {
+        console.log('Failed to refresh words data:', error);
+    }
+}
 // Add new word pair
 async function addWord() {
     const latinInput = document.getElementById('latin-input');
@@ -297,17 +336,20 @@ async function addWord() {
 
     try {
         const timestamp = Date.now();
-        let wordData = {
-            latin: latin,
-            english: english,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            timestamp: timestamp,
-            difficulty: 0,
-            lastStudied: null,
-            correctCount: 0,
-            incorrectCount: 0,
-            isNoun: isNoun
-        };
+let wordData = {
+    latin: latin,
+    english: english,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    timestamp: timestamp,
+    difficulty: 0,
+    lastStudied: null,
+    correctCount: 0,
+    incorrectCount: 0,
+    consecutiveCorrect: 0,
+    isDifficult: false,
+    isNoun: isNoun
+};
+
 
         // Fetch declension if it's a noun
         if (isNoun) {
@@ -618,7 +660,10 @@ async function importWords(event) {
 function studyLesson() {
     window.location.href = `study.html?courseId=${courseId}&lessonId=${lessonId}`;
 }
-
+// Study difficult words from this lesson only
+function studyDifficultWords() {
+    window.location.href = `study.html?courseId=${courseId}&lessonId=${lessonId}&mode=difficult`;
+}
 // Show/hide declension loading
 function showDeclensionLoading() {
     document.getElementById('declension-loading').style.display = 'block';
@@ -668,4 +713,15 @@ document.getElementById('declension-modal').addEventListener('click', function(e
     if (e.target === this) {
         closeDeclensionModal();
     }
+});
+
+// Refresh words data when page becomes visible (user returns from study)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        setTimeout(refreshWordsData, 500);
+    }
+});
+
+window.addEventListener('focus', function() {
+    setTimeout(refreshWordsData, 500);
 });
